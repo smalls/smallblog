@@ -1,7 +1,8 @@
 (ns start-clojure.core
-	(:use compojure.core)
-	(:require	[compojure.route :as route]
-				[compojure.handler :as handler]))
+	(:use [compojure.core])
+	(:require [compojure.route :as route]
+			[compojure.handler :as handler]
+			[start-clojure.data :as data]))
 
 (defn index-page []
 	(str "hi hi hi"))
@@ -22,4 +23,3 @@
 
 (def app
 	(handler/site main-routes))
-

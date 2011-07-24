@@ -1,6 +1,7 @@
 (ns start-clojure.test.core
-  (:use [start-clojure.core])
-  (:use [clojure.test]))
+	(:use [start-clojure.core])
+	(:require [start-clojure.data :as data])
+	(:use [clojure.test]))
 
-(deftest replace-me ;; FIXME: write
-  (is false "No tests have been written."))
+(deftest post
+	(is "text" (data/make-post "text")))
