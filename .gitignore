@@ -1,6 +1,8 @@
 pom.xml
-*jar
+*.jar
+*.swp
 /lib/
 /classes/
 .lein-failures
 .lein-deps-sum
+test/start_clojure/test.sqlite
