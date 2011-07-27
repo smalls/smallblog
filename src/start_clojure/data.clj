@@ -1,6 +1,5 @@
 (ns start-clojure.data
-	(:require [clojure.contrib.sql :as sql] )
-	(:import (java.sql DriverManager)))
+	(:require	[clojure.contrib.sql :as sql]))
 
 #_ (comment
 	CREATE TABLE posts (
@@ -24,7 +23,7 @@
 		(sql/insert-values :posts [:title :content]
 			[title content])))
 
-(defn get-mostrecent-posts [number, offset]
+(defn get-posts [number, offset]
 	(sql/with-connection db
 		(sql/with-query-results rs
 				["select * from posts order by created_date desc limit ? offset ?"

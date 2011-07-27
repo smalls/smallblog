@@ -1,8 +1,9 @@
 (ns start-clojure.core
-	(:use [compojure.core])
-	(:require [compojure.route :as route]
-			[compojure.handler :as handler]
-			[start-clojure.data :as data]))
+	(:use		[compojure.core]
+				[clojure.data.json :only (json-str write-json read-json)])
+	(:require	[compojure.route :as route]
+				[compojure.handler :as handler]
+				[start-clojure.data :as data]))
 
 (defn index-page []
 	(str "hi hi hi"))
@@ -13,6 +14,8 @@
 
 	(POST "/post" []
 		(str "tbd"))
+	(GET "/post/" []
+		(str "<h1>post </h1>"))
 	(GET "/post/:id" [id]
 		(str "<h1>post " id " </h1>"))
 	(PUT "/post/:id" [id]
