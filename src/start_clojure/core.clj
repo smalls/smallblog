@@ -17,7 +17,7 @@
 	(GET "/post/" []
 		(json/json-str (data/get-posts 10 0)))
 	(GET "/post/:id" [id]
-		(str "<h1>post " id " </h1>"))
+		(json/json-str (data/get-post id)))
 	(PUT "/post/:id" [id]
 		(str "tbd id " id))
 

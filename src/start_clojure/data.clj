@@ -23,9 +23,14 @@
 		(sql/insert-values :posts [:title :content]
 			[title content])))
 
+(defn get-post [id]
+	(sql/with-connection db
+		(sql/with-query-results rs ["select * from posts where id=?" id]
+			(first rs))))
+
 (defn get-posts [number, offset]
 	(sql/with-connection db
 		(sql/with-query-results rs
 				["select * from posts order by created_date desc limit ? offset ?"
 						number offset]
-					(doall rs))))
+			(doall rs))))

@@ -4,15 +4,20 @@
 				[clj-time.core :only (now)])
 	(:require	[start-clojure.data :as data]))
 
+; test (make-post), (get-posts 1 0), and (get-post id)
 (deftest post
 	(let [content (str "some content " (now))]
 		(data/make-post "text" content)
 		(let [result (data/get-posts 1 0)]
 			(is (= 1 (count result)))
-			(is (= content (get (first result) :content)))))
-	(comment the sleep is so that sqlite can sort things)
+			(is (= content (get (first result) :content)))
+	  		(let [single-result (data/get-post (get (first result) :id))]
+		 		(is (= (get (first result) :content)
+						(get single-result :content))))))
+	(comment sqlite doesn't sort sub-1s, so this'll clean up for the next test)
 	(. Thread (sleep 1001)))
 
+; test getting many posts, and posts over an interval
 (deftest interval-post
 	(let [content1 (str "first content " (now))
 			content2 (str "second content " (now))
