@@ -1,4 +1,4 @@
-(ns start-clojure.test.core
+(ns start-clojure.test.data
 	(:use		[start-clojure.core]
 				[clojure.test]
 				[clj-time.core :only (now)])
