@@ -28,14 +28,14 @@
 (defroutes main-routes
 	(GET "/" [] (index-page))
 
-	(GET "/post/" []
+	(GET "/api/post/" []
 		(json-response (doall (for [post (data/get-posts 10 0)]
 			(post-representation post)))))
-	(POST "/post/" [title content]
+	(POST "/api/post/" [title content]
 		(json-response (post-representation (data/make-post title content))))
-	; (GET "/post/:id" [id]
+	; (GET "/api/post/:id" [id]
 	; 	(json-response (data/get-post id)))
-	; (PUT "/post/:id" [id]
+	; (PUT "/api/post/:id" [id]
 	; 	(str "tbd id " id))
 
 	(route/resources "/")
