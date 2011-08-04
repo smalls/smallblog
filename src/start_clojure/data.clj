@@ -1,36 +1,44 @@
 (ns start-clojure.data
-	(:require	[clojure.contrib.sql :as sql]))
+	(:require	[clj-sql.core :as sql]))
 
 #_ (comment
-	CREATE TABLE posts (
-		id INTEGER PRIMARY KEY ASC,
-		title TEXT NOT NULL,
-		content TEXT NOT NULL,
-		created_date DATE DEFAULT (datetime()) NOT NULL
-	);
+	postgres
+		bash$ createdb smallblog
+		bash$ psql smallblog -h localhost
+		psql$
+			CREATE TABLE posts (
+				id SERIAL,
+				title TEXT NOT NULL,
+				content TEXT NOT NULL,
+				created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
+				PRIMARY KEY(id)
+			);
 )
 
-(def db-path  "test/start_clojure/test.sqlite")
-(def db {:classname  "org.sqlite.JDBC",
-				 :subprotocol   "sqlite",
-				 :subname       db-path})
+(let [db-host "localhost"
+		db-port "5432"
+		db-name "smallblog"]
+	(def *db* {:classname		"org.postgresql.Driver",
+				:subprotocol	"postgresql",
+				:subname		(str "//" db-host ":" db-port "/" db-name)
+				;:user			"auser"
+				;:password		"apw"
+			}))
 
-(def +transactions-query+ "select * from my_table")
-
-
-(defn make-post [title, content]
-	(sql/with-connection db
-		(sql/insert-values :posts [:title :content]
-			[title content])))
 
 (defn get-post [id]
-	(sql/with-connection db
+	(sql/with-connection *db*
 		(sql/with-query-results rs ["select * from posts where id=?" id]
 			(first rs))))
 
 (defn get-posts [number, offset]
-	(sql/with-connection db
+	(sql/with-connection *db*
 		(sql/with-query-results rs
 				["select * from posts order by created_date desc limit ? offset ?"
 						number offset]
 			(doall rs))))
+
+(defn make-post [title, content]
+	(sql/with-connection *db*
+		(let [id (sql/insert-record :posts {:title title :content content})]
+			(get-post id))))

@@ -7,7 +7,8 @@
 ; test (make-post), (get-posts 1 0), and (get-post id)
 (deftest post
 	(let [content (str "some content " (now))]
-		(data/make-post "text" content)
+		(let [new-row (data/make-post "text" content)]
+			(is (= content (:content new-row))))
 		(let [result (data/get-posts 1 0)]
 			(is (= 1 (count result)))
 			(is (= content (get (first result) :content)))

@@ -5,6 +5,9 @@
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
 				[start-clojure.data :as data]
+				[clj-time.core :as clj-time]
+				[clj-time.format :as clj-time-format]
+				[clj-time.coerce :as clj-time-coerce]
 				[clj-json.core :as json]))
 
 (defn index-page []
@@ -15,17 +18,21 @@
 		:headers {"Content-Type" "application/json"}
 		:body (json/generate-string data)})
 
+(defn post-representation [post]
+	{:id (:id post), :title (:title post), :content (:content post),
+			:created_date (clj-time-format/unparse
+					(clj-time-format/formatters :basic-date-time)
+					(clj-time-coerce/from-date (:created_date post)))})
+
 
 (defroutes main-routes
 	(GET "/" [] (index-page))
 
 	(GET "/post/" []
-		(json-response (data/get-posts 10 0)))
+		(json-response (doall (for [post (data/get-posts 10 0)]
+			(post-representation post)))))
 	(POST "/post/" [title content]
-		(data/make-post title content)
-		(println (str "done title " title " content " content))
-		; tdb XXX return id
-		(str "insert successful"))
+		(json-response (post-representation (data/make-post title content))))
 	; (GET "/post/:id" [id]
 	; 	(json-response (data/get-post id)))
 	; (PUT "/post/:id" [id]
