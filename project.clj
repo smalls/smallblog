@@ -6,6 +6,7 @@
 							[ring-json-params "0.1.3"]
 							[clj-time "0.3.0"]
 				 			[clj-sql "0.0.5"]
+							[enlive "1.0.0"]
 				 			[postgresql/postgresql "9.0-801.jdbc4"]]
 	:dev-dependencies	[[lein-ring "0.4.5"]]
 	:ring				{:handler start-clojure.core/app})

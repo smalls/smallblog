@@ -26,5 +26,5 @@
 			:created_date (java.sql.Timestamp. (.getMillis (
 					date-time 2011 8 2 3 4 5 6)))}]
 		(is (= "20110802T030405.006Z" (:created_date
-				(post-representation post))))))
+				(render-post-json post))))))
 

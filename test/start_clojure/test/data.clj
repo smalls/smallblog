@@ -14,7 +14,7 @@
 			(is (= content (get (first result) :content)))
 	  		(let [single-result (data/get-post (get (first result) :id))]
 		 		(is (= (get (first result) :content)
-						(get single-result :content))))))
+						(get single-result :content)))))))
 
 ; test getting many posts, and posts over an interval
 (deftest interval-post
