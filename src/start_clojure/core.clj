@@ -1,7 +1,8 @@
 (ns start-clojure.core
 	(:use		[compojure.core]
 				[ring.middleware.json-params]
-				[ring.middleware.reload])
+				[ring.middleware.reload]
+				[ring.middleware.stacktrace])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
 				[start-clojure.data :as data]
@@ -51,5 +52,6 @@
 
 (def app
 	(-> main-routes
-		(wrap-reload '(start-clojure.templates))
-		wrap-json-params))
+		(wrap-reload '(start-clojure.templates)) ; XXX not for production
+		(wrap-stacktrace)
+		(wrap-json-params)))
