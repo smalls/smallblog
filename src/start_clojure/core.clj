@@ -1,13 +1,14 @@
 (ns start-clojure.core
 	(:use		[compojure.core]
-				[ring.middleware.json-params])
+				[ring.middleware.json-params]
+				[ring.middleware.reload])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
 				[start-clojure.data :as data]
+				[start-clojure.templates :as templates]
 				[clj-time.core :as clj-time]
 				[clj-time.format :as clj-time-format]
 				[clj-time.coerce :as clj-time-coerce]
-				[net.cgrand.enlive-html :as html]
 				[clj-json.core :as json]))
 
 (defn index-page []
@@ -24,20 +25,8 @@
 					(clj-time-format/formatters :basic-date-time)
 					(clj-time-coerce/from-date (:created_date post)))})
 
-(html/defsnippet post-snippet "start_clojure/templates/main.html" [:div.post]
-	[{:keys [title body]}]
-	[:.title] (html/content title)
-	[:.body] (html/content body))
-
-(html/deftemplate main "start_clojure/templates/main.html"
-	[ctx]
-	[:p#blogname] (html/content (:blogname ctx))
-	[:head :title] (html/content (:blogname ctx))
-	[:div.posts] (html/clone-for [item [{:title "enlive title" :body "enlive body"},{:title "enlive title2" :body "enlive body 2"}]]
-				   (html/content (post-snippet item))))
-
 (defn render-posts-html [posts]
-	(apply str (main {:blogname "first blog name", :posts posts})))
+	(templates/main {:blogname "first blog name", :posts posts}))
 
 
 (defroutes main-routes
@@ -62,4 +51,5 @@
 
 (def app
 	(-> main-routes
+		(wrap-reload '(start-clojure.templates))
 		wrap-json-params))
