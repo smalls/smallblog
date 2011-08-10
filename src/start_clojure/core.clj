@@ -24,13 +24,21 @@
 					(clj-time-format/formatters :basic-date-time)
 					(clj-time-coerce/from-date (:created_date post)))})
 
+(html/defsnippet post-snippet "start_clojure/templates/main.html" [:div.post]
+	[{:keys [title body]}]
+	[:.title] (html/content title)
+	[:.body] (html/content body))
+
 (html/deftemplate main "start_clojure/templates/main.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
-	[:head :title] (html/content (:blogname ctx)))
+	[:head :title] (html/content (:blogname ctx))
+	[:div.post] (html/content (post-snippet
+								  {:title "foo title" :body "foo body"}))
+				  )
 
 (defn render-posts-html [posts]
-	(apply str (main {:blogname "first blog name"})))
+	(apply str (main {:blogname "first blog name", :posts posts})))
 
 
 (defroutes main-routes
