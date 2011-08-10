@@ -33,9 +33,8 @@
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx))
-	[:div.post] (html/content (post-snippet
-								  {:title "foo title" :body "foo body"}))
-				  )
+	[:div.posts] (html/clone-for [item [{:title "enlive title" :body "enlive body"},{:title "enlive title2" :body "enlive body 2"}]]
+				   (html/content (post-snippet item))))
 
 (defn render-posts-html [posts]
 	(apply str (main {:blogname "first blog name", :posts posts})))
