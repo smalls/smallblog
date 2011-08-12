@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>blog name</title>
+
+	<link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection">
+	<link rel="stylesheet" href="/css/blueprint/print.css" type="text/css" media="print">
+	<!--[if lt IE 8]>
+		<link rel="stylesheet" href="/css/blueprint/ie.css" type="text/css" media="screen, projection">
+	<![endif]-->
+
+	<style type="text/css">
+		div.postdate {font-size: .8em; line-height: .8em;}
+		div.posttitle {margin-top: 1em;}
+		.textinput {width: 538px; padding: 5px;}
+	</style>
+
+	<script type="text/javascript" src="/js/pagedown/Markdown.Converter.js"></script> 
+	<script type="text/javascript" src="/js/pagedown/Markdown.Sanitizer.js"></script> 
+	<script type="text/javascript" src="/js/pagedown/Markdown.Editor.js"></script>
+</head>
+<body>
+<div class="container">
+	<br>
+	<div id="header" class="prepend-5 span-14 append-5 last">
+		<p id="blogname" class="large" style="text-align: center">blog name</p>
+	</div>
+
+	<div class="wmd-panel prepend-5 span-14">
+		<form action="new" method="POST">
+			<!-- 14 columns * 30, 12 gutters * 10, -1px each side for border -->
+			<input type="text" name="title" class="textinput">
+			<textarea class="wmd-input" name="content" id="wmd-input"
+					class="textinput"></textarea>
+			<input type="submit" value="submit" style="float: right">
+		</form>
+	</div>
+	<div class="prepend-1 span-4 last">
+		<p>For a quick guide on the syntax supported, check out
+			<a href="http://daringfireball.net/projects/markdown/syntax">Markdown Syntax</a>.
+			The short of it is, just do everything like in an email.</p>
+	</div>
+	<div class="prepend-5 span-14 append-5 last" style="margin-top: 10px">
+		Preview:
+		<div id="wmd-preview" class="wmd-panel" style="border: 1px solid #BBB">
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript"> 
+	/* see http://pagedown.googlecode.com/hg/demo/browser/demo.html */
+	(function () {
+		var converter = Markdown.getSanitizingConverter();
+		var editor = new Markdown.Editor(converter);
+		editor.run();
+	})();
+</script> 
+
+</body>
