@@ -11,7 +11,7 @@
 (defn request-post [resource web-app & params]
  	(web-app {:request-method :post :uri resource :params (first params)}))
 
-(deftest routes
+(deftest test-api-routes
 	(let [new-content (str "asdf new content" (now))]
 		(is (= 200 (:status (request-get "/api/post/" main-routes))))
 		(is (= 200 (:status (request-post "/api/post/" main-routes
@@ -29,7 +29,7 @@
 		(is (= "20110802T030405.006Z" (:created_date
 				(render-post-json post))))))
 
-(deftest test-get-posts []
+(deftest test-get-html-posts []
 	(let [content (str "some new content" (now)) title (str "new title " (now))]
 		(is (= 200 (:status (request-post "/api/post/" main-routes
 			{:title title :content content}))))
@@ -38,3 +38,13 @@
 			(is (clojure.contrib.string/substring? "div class=\"container" body))
 			(is (clojure.contrib.string/substring? title body))
 			(is (clojure.contrib.string/substring? content body)))))
+
+(deftest test-get-markdownified-html-posts []
+	(let [nowstr (str (now))
+			reqcontent (str "some markdown content " nowstr " *italic* **bold**")
+			expcontent (str "<p>some markdown content " nowstr " <em>italic</em> <strong>bold</strong></p>")
+			title (str "new title " (now))]
+		(is (= 200 (:status (request-post "/api/post/" main-routes
+			{:title title :content reqcontent}))))
+		(let [body (join (:body (request-get "/post/" main-routes)))]
+			(is (clojure.contrib.string/substring? expcontent body)))))
