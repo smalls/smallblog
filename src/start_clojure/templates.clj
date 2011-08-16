@@ -13,10 +13,10 @@
 			input (Context/javaToJS post scope)
 			script (str
 					(html/get-resource "start_clojure/Markdown.Converter.js" slurp)
-					"var converter = new Markdown.Converter();"
-			  "converter.makeHtml(input);")]
-					;(html/get-resource "start_clojure/Markdown.Sanitizer.js" slurp)
-					;"Markdown.getSanitizingConverter().makeHtml(input);")]
+					"window = {Markdown: {Converter: Markdown.Converter}};"
+					(html/get-resource "start_clojure/Markdown.Sanitizer.js" slurp)
+					"san = window.Markdown.getSanitizingConverter;"
+					"san().makeHtml(input);")]
 		(try
 			(ScriptableObject/putProperty scope "input" input)
 			(let [result (.evaluateString cx scope script "<cmd>" 1 nil)]
@@ -31,7 +31,7 @@
 			[:.posttitle] (html/content (:title item))
 			[:.postdate] (html/content (clj-time-format/unparse date-output-format
 					(clj-time-coerce/from-date (:created_date item))))
-			[:.postbody] (html/content (markdownify (:content item)))))
+			[:.postbody] (html/html-content (markdownify (:content item)))))
 
 (html/deftemplate newpost "start_clojure/templates/newpost.html"
 	[ctx]
