@@ -17,27 +17,36 @@
 	(let [response-body (:body response)]
 		(json/parse-string response-body true)))
 
-(deftest test-api-routes
-	(let [new-content (str "asdf new content" (now))
-			url (str "/api/blog/")
+(defn with-blog-id
+	"calls func with the first argument of blogid and then the rest of the
+	arguments"
+	[func]
+	(let [url (str "/api/blog/")
 			response (request-post url main-routes {:title "blog title"})
 			response-body (parse-json-body response)
-			blogid (:id response-body)]
+			blogid (:id response-body)
+			args '()]
 		(try
 			(is (= 200 (:status response)) (str "request failed " url))
 			(is (= 200 (:status (request-get (str "/api/blog/" blogid "/post/")
 					main-routes))))
-			(is (= 200 (:status (request-post (str "/api/blog/" blogid "/post/")
-				main-routes {:title "mytitle" :content new-content}))))
-			(let [url (str "/api/blog/"  blogid "/post/")
-					response (request-get url main-routes)
-		 			body (:body response)]
-				(is (= 200 (:status response)) (str "request failed " url))
-				(is (clojure.contrib.string/substring?
-						(str ":\"" new-content "\"") body ))
-				(is (clojure.contrib.string/substring? "\"content\":" body))
-				(is (clojure.contrib.string/substring? "\"title\":" body)))
+			(apply func blogid args)
 			(finally (data/delete-blog blogid)))))
+
+(deftest test-api-routes
+	(with-blog-id (fn [blogid]
+		(let [new-content (str "asdf new content" (now))
+				url (str "/api/blog/" blogid "/post/")
+				response-post (request-post url main-routes
+						{:title "mytitle" :content new-content})
+				response-get (request-get url main-routes)
+				body-get (:body response-get)]
+			(is (= 200 (:status response-post)))
+			(is (= 200 (:status response-get)) (str "request failed " url))
+			(is (clojure.contrib.string/substring?
+					(str ":\"" new-content "\"") body-get ))
+			(is (clojure.contrib.string/substring? "\"content\":" body-get))
+			(is (clojure.contrib.string/substring? "\"title\":" body-get))))))
 
 (deftest test-post-json-representation []
 	(let [post {:title "title", :text "text",
@@ -47,35 +56,32 @@
 				(render-post-json post))))))
 
 (deftest test-get-html-posts []
-	(let [content (str "some new content" (now)) title (str "new title " (now))
-			url (str "/api/blog/")
-			response (request-post url main-routes {:title "blog title"})
-			response-body (parse-json-body response)
-			blogid (:id response-body)]
-		(try
-			(is (= 200 (:status (request-post (str "/api/blog/" blogid "/post/")
-					main-routes {:title title :content content}))))
-			(let [body (join (:body (request-get (str "/blog/" blogid "/post/")
-					main-routes)))]
-				(is (clojure.contrib.string/substring? "<html" body))
-				(is (clojure.contrib.string/substring? "div class=\"container" body))
-				(is (clojure.contrib.string/substring? title body))
-				(is (clojure.contrib.string/substring? content body)))
-			(finally (data/delete-blog blogid)))))
+	(with-blog-id (fn [blogid]
+		(let [content (str "some new content" (now)) title (str "new title " (now))
+				response-post (request-post (str "/api/blog/" blogid "/post/")
+						main-routes {:title title :content content})
+				response-get (request-get (str "/blog/" blogid "/post/")
+						main-routes)
+				response-body (join (:body response-get))]
+			(is (= 200 (:status response-post)))
+			(is (= 200 (:status response-get)))
+			(is (clojure.contrib.string/substring? "<html" response-body))
+			(is (clojure.contrib.string/substring? "div class=\"container" response-body))
+			(is (clojure.contrib.string/substring? title response-body))
+			(is (clojure.contrib.string/substring? content response-body))))))
 
 (deftest test-get-markdownified-html-posts []
-	(let [nowstr (str (now))
-			reqcontent (str "some markdown content " nowstr " *italic* **bold**")
-			expcontent (str "<p>some markdown content " nowstr " <em>italic</em> <strong>bold</strong></p>")
-			title (str "new title " (now))
-			url (str "/api/blog/")
-			response (request-post url main-routes {:title "blog title"})
-			response-body (parse-json-body response)
-			blogid (:id response-body)]
-		(try
-			(is (= 200 (:status (request-post (str "/api/blog/" blogid "/post/")
-					main-routes {:title title :content reqcontent}))))
-			(let [body (join (:body (request-get (str "/blog/" blogid "/post/")
-					main-routes)))]
-				(is (clojure.contrib.string/substring? expcontent body)))
-			(finally (data/delete-blog blogid)))))
+	(with-blog-id (fn [blogid]
+		(let [nowstr (str (now))
+				reqcontent (str "some markdown content " nowstr " *italic* **bold**")
+				expcontent (str "<p>some markdown content " nowstr " <em>italic</em> <strong>bold</strong></p>")
+				title (str "new title " (now))
+				response-post (request-post (str "/api/blog/" blogid "/post/")
+						main-routes {:title title :content reqcontent})
+				response-get (request-get (str "/blog/" blogid "/post/")
+						main-routes)
+				response-body (join (:body response-get))]
+			(is (= 200 (:status response-post)))
+			(is (= 200 (:status response-get)))
+			(is (clojure.contrib.string/substring?
+					expcontent response-body))))))
