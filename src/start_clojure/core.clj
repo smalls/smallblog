@@ -27,6 +27,12 @@
 					(clj-time-format/formatters :basic-date-time)
 					(clj-time-coerce/from-date (:created_date post)))})
 
+(defn render-blog-json [blog]
+	{:id (:id blog), :name (:name blog),
+			:created_date (clj-time-format/unparse
+					(clj-time-format/formatters :basic-date-time)
+					(clj-time-coerce/from-date (:created_date blog)))})
+
 (defn render-html-posts [posts]
 	(templates/main {:blogname "first blog name", :posts posts}))
 
@@ -38,21 +44,25 @@
 	(GET "/" [] (index-page))
 	
 
-	(GET "/post/" []
-		(render-html-posts (data/get-posts 10 0)))
-	(GET "/post/new" []
+	(GET "/blog/:bid/post/" [bid]
+		(render-html-posts (data/get-posts (Integer/parseInt bid) 10 0)))
+	(GET "/blog/:bid/post/new" [bid]
 		(render-html-newpost))
-	(POST "/post/new" [title content]
-		(println "title" title "content" content)
-		(data/make-post title content)
+	(POST "/blog/:bid/post/new" [bid title content]
+		(data/make-post (Integer/parseInt bid) title content)
 		(str "XXX should redirect or something title " title " content " content))
 
 
-	(GET "/api/post/" []
-		(json-response (doall (for [post (data/get-posts 10 0)]
-				(render-post-json post)))))
-	(POST "/api/post/" [title content]
-		(json-response (render-post-json (data/make-post title content))))
+	(POST "/api/blog/" [title]
+		(json-response (render-blog-json (data/make-blog title))))
+
+	(GET "/api/blog/:bid/post/" [bid]
+		(let [bid (Integer/parseInt bid)]
+			(json-response (doall (for [post (data/get-posts bid 10 0)]
+					(render-post-json post))))))
+	(POST "/api/blog/:bid/post/" [bid title content]
+		(json-response (render-post-json
+			(data/make-post (Integer/parseInt bid) title content))))
 	; (GET "/api/post/:id" [id]
 	; 	(json-response (data/get-post id)))
 	; (PUT "/api/post/:id" [id]
