@@ -41,7 +41,7 @@
 		(try
 			(let [blogid (:id (data/make-blog loginid "blogname"))
 					postid (:id (data/make-post blogid "title" "content"))]
-				(data/delete-blog loginid blogid)
+				(data/delete-blog blogid)
 				(sql/with-connection data/*db*
 					(sql/with-query-results rs
 							["select * from post where id=?" postid]

@@ -59,6 +59,7 @@ PRIMARY KEY(id)
 	(sql/with-connection *db*
 		(sql/delete-rows :login ["id=?" id])))
 
+
 (defn get-blog [id]
 	(sql/with-connection *db*
 		(sql/with-query-results rs ["select * from blog where id=?" id]
@@ -69,8 +70,7 @@ PRIMARY KEY(id)
 		(let [id (sql/insert-record :blog {:title title :owner login_id})]
 			(get-blog id))))
 
-(defn delete-blog [login_id, id]
-	; XXX check to make sure the user has permissions
+(defn delete-blog [id]
 	(sql/with-connection *db*
 		(sql/delete-rows :blog ["id=?" id])))
 
