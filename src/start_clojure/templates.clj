@@ -1,9 +1,13 @@
 (ns start-clojure.templates
+	(:use			[ring.util.codec :only (url-encode)])
 	(:require		[net.cgrand.enlive-html :as html]
 					[clj-time.core :as clj-time]
 					[clj-time.format :as clj-time-format]
 					[clj-time.coerce :as clj-time-coerce])
 	(:import (org.mozilla.javascript Context ScriptableObject)))
+
+(def *login-url* "/login")
+(def *login-redirect-url* "/login-redirect")
 
 (def date-output-format (clj-time-format/formatter "dd MMM yyyy HH:mm"))
 
@@ -37,3 +41,15 @@
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx)))
+
+(html/deftemplate newpost "start_clojure/templates/newpost.html"
+	[ctx]
+	[:p#blogname] (html/content (:blogname ctx))
+	[:head :title] (html/content (:blogname ctx)))
+
+(html/deftemplate login "start_clojure/templates/login.html"
+	[ctx]
+	[:#login_form] (html/set-attr :action
+		(if (nil? (:url ctx))
+			*login-redirect-url*
+			(str *login-redirect-url* "?url=" (url-encode(:url ctx))))))

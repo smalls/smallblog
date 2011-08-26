@@ -2,9 +2,9 @@
 	(:use		[start-clojure.core]
 				[clojure.test]
 				[clojure.string :only (join)]
+				[clojure.contrib.string :only (substring?)]
 				[clj-time.core :only (now date-time)])
-	(:require	[clojure.contrib.string]
-				[clj-json.core :as json]
+	(:require	[clj-json.core :as json]
 				[start-clojure.data :as data]))
 
 (defn request-get [resource web-app & params]
@@ -43,10 +43,10 @@
 				body-get (:body response-get)]
 			(is (= 200 (:status response-post)))
 			(is (= 200 (:status response-get)) (str "request failed " url))
-			(is (clojure.contrib.string/substring?
+			(is (substring?
 					(str ":\"" new-content "\"") body-get ))
-			(is (clojure.contrib.string/substring? "\"content\":" body-get))
-			(is (clojure.contrib.string/substring? "\"title\":" body-get))))))
+			(is (substring? "\"content\":" body-get))
+			(is (substring? "\"title\":" body-get))))))
 
 (deftest test-post-json-representation []
 	(let [post {:title "title", :text "text",
@@ -65,10 +65,10 @@
 				response-body (join (:body response-get))]
 			(is (= 200 (:status response-post)))
 			(is (= 200 (:status response-get)))
-			(is (clojure.contrib.string/substring? "<html" response-body))
-			(is (clojure.contrib.string/substring? "div class=\"container" response-body))
-			(is (clojure.contrib.string/substring? title response-body))
-			(is (clojure.contrib.string/substring? content response-body))))))
+			(is (substring? "<html" response-body))
+			(is (substring? "div class=\"container" response-body))
+			(is (substring? title response-body))
+			(is (substring? content response-body))))))
 
 (deftest test-get-markdownified-html-posts []
 	(with-blog-id (fn [blogid]
@@ -83,5 +83,14 @@
 				response-body (join (:body response-get))]
 			(is (= 200 (:status response-post)))
 			(is (= 200 (:status response-get)))
-			(is (clojure.contrib.string/substring?
+			(is (substring?
 					expcontent response-body))))))
+
+(deftest test-get-login []
+	(let [response-get (request-get "/login")]
+		(is (= 200 (:status response-get)))
+		(is (substring? "action=\"login\"" (:body response-get))))
+	(let [url "foobarbaz"
+			response-get (request-get (str "/login?url=" url))]
+		(is (= 200 (:status response-get)))
+		(is (substring? (str "action=\"" url "\"") (:body response-get)))))

@@ -1,9 +1,12 @@
 (ns start-clojure.core
 	(:use		[compojure.core]
+				[ring.util.response :only (redirect redirect-after-post)]
+				[ring.util.codec :only (url-encode)]
 				[ring.middleware.json-params]
 				[ring.middleware.params]
 				[ring.middleware.reload]
-				[ring.middleware.stacktrace])
+				[ring.middleware.stacktrace]
+				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
 				[start-clojure.data :as data]
@@ -40,8 +43,42 @@
 	(templates/newpost {:blogname "first blog name"}))
 
 
+
+(defn permission-denied []
+	(str "permission denied page"))
+
+(def security-config
+	[#"/api/blog/" :admin
+	 #"/blog/.*/post/new" #{:admin :owner}
+	 #"/api/blog/.*/post/" #{:admin :owner}
+	 #"/login-redirect" #{:admin :owner}
+	 #".*" :any])
+
+(defn authorize [request]
+	(let [form-params (:form-params request)
+			username (get form-params "email")
+			password (get form-params "password")]
+		(if (and (not (nil? username)) (not (nil? password)))
+			(binding [*sandbar-current-user*
+					{:name username :roles [:owner] :password password}]
+				(session-put! :current-user *sandbar-current-user*)
+				*sandbar-current-user*)
+			(let [redirect-url (str templates/*login-url* "?url="
+							(url-encode (:uri request)))] 
+				(redirect redirect-url)))))
+
+
+
 (defroutes main-routes
 	(GET "/" [] (index-page))
+
+	(GET "/permission-denied" [] (permission-denied))
+	(GET "/logout" [] (logout! {}))
+	(GET templates/*login-url* [url] (templates/login {:url url}))
+	(POST templates/*login-redirect-url* [url] (do
+			(if (nil? url)
+				(redirect-after-post "/")
+				(redirect-after-post url))))
 	
 
 	(GET "/blog/:bid/post/" [bid]
@@ -73,6 +110,8 @@
 
 (def app
 	(-> main-routes
+		(with-security security-config authorize)
+		(wrap-stateful-session)
 		(wrap-reload '(start-clojure.templates)) ; XXX not for production
 		(wrap-stacktrace)
 		(wrap-params)
