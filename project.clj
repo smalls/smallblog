@@ -1,4 +1,4 @@
-(defproject start-clojure "1.0.0-SNAPSHOT"
+(defproject smallblog "1.0.0-SNAPSHOT"
 	:description		"smallblog"
 	:dependencies		[[org.clojure/clojure "1.2.1"]
 							[org.clojure/clojure-contrib "1.2.0"]
@@ -12,4 +12,4 @@
 							[sandbar/sandbar "0.3.0"]
 				 			[postgresql/postgresql "9.0-801.jdbc4"]]
 	:dev-dependencies	[[lein-ring "0.4.5"]]
-	:ring				{:handler start-clojure.core/app})
+	:ring				{:handler smallblog.core/app})

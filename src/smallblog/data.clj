@@ -1,4 +1,4 @@
-(ns start-clojure.data
+(ns smallblog.data
 	(:require	[clj-sql.core :as sql]))
 
 #_ (comment

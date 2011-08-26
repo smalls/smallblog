@@ -1,4 +1,4 @@
-(ns start-clojure.templates
+(ns smallblog.templates
 	(:use			[ring.util.codec :only (url-encode)])
 	(:require		[net.cgrand.enlive-html :as html]
 					[clj-time.core :as clj-time]
@@ -16,9 +16,9 @@
 			scope (.initStandardObjects cx)
 			input (Context/javaToJS post scope)
 			script (str
-					(html/get-resource "start_clojure/Markdown.Converter.js" slurp)
+					(html/get-resource "smallblog/Markdown.Converter.js" slurp)
 					"window = {Markdown: {Converter: Markdown.Converter}};"
-					(html/get-resource "start_clojure/Markdown.Sanitizer.js" slurp)
+					(html/get-resource "smallblog/Markdown.Sanitizer.js" slurp)
 					"san = window.Markdown.getSanitizingConverter;"
 					"san().makeHtml(input);")]
 		(try
@@ -27,7 +27,7 @@
 				(Context/toString result))
 		(finally (Context/exit)))))
 
-(html/deftemplate main "start_clojure/templates/main.html"
+(html/deftemplate main "smallblog/templates/main.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx))
@@ -37,17 +37,17 @@
 					(clj-time-coerce/from-date (:created_date item))))
 			[:.postbody] (html/html-content (markdownify (:content item)))))
 
-(html/deftemplate newpost "start_clojure/templates/newpost.html"
+(html/deftemplate newpost "smallblog/templates/newpost.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx)))
 
-(html/deftemplate newpost "start_clojure/templates/newpost.html"
+(html/deftemplate newpost "smallblog/templates/newpost.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx)))
 
-(html/deftemplate login "start_clojure/templates/login.html"
+(html/deftemplate login "smallblog/templates/login.html"
 	[ctx]
 	[:#login_form] (html/set-attr :action
 		(if (nil? (:url ctx))

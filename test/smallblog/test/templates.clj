@@ -1,5 +1,5 @@
-(ns start-clojure.test.templates
-	(:use		[start-clojure.templates]
+(ns smallblog.test.templates
+	(:use		[smallblog.templates]
 				[clojure.test]
 				[clojure.string :only (join)]
 				[clj-time.core :only (now date-time)])

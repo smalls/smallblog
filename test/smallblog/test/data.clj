@@ -1,8 +1,8 @@
-(ns start-clojure.test.data
-	(:use		[start-clojure.core]
+(ns smallblog.test.data
+	(:use		[smallblog.core]
 				[clojure.test]
 				[clj-time.core :only (now)])
-	(:require	[start-clojure.data :as data]
+	(:require	[smallblog.data :as data]
 				[clj-sql.core :as sql]))
 
 (deftest login

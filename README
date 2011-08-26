@@ -1,6 +1,6 @@
-# start-clojure
+# smallblog
 
-FIXME: write description
+A small basic blog system.
 
 ## Usage
 
@@ -8,6 +8,6 @@ FIXME: write
 
 ## License
 
-Copyright (C) 2011 FIXME
+Copyright (C) 2011 Matt Small
 
 Distributed under the Eclipse Public License, the same as Clojure.

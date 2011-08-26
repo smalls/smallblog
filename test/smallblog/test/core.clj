@@ -1,11 +1,11 @@
-(ns start-clojure.test.core
-	(:use		[start-clojure.core]
+(ns smallblog.test.core
+	(:use		[smallblog.core]
 				[clojure.test]
 				[clojure.string :only (join)]
 				[clojure.contrib.string :only (substring?)]
 				[clj-time.core :only (now date-time)])
 	(:require	[clj-json.core :as json]
-				[start-clojure.data :as data]))
+				[smallblog.data :as data]))
 
 (defn request-get [resource web-app & params]
  	(web-app {:request-method :get :uri resource :params (first params)}))

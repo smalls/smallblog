@@ -1,4 +1,4 @@
-(ns start-clojure.core
+(ns smallblog.core
 	(:use		[compojure.core]
 				[ring.util.response :only (redirect redirect-after-post)]
 				[ring.util.codec :only (url-encode)]
@@ -9,8 +9,8 @@
 				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
-				[start-clojure.data :as data]
-				[start-clojure.templates :as templates]
+				[smallblog.data :as data]
+				[smallblog.templates :as templates]
 				[clj-time.core :as clj-time]
 				[clj-time.format :as clj-time-format]
 				[clj-time.coerce :as clj-time-coerce]
@@ -112,7 +112,7 @@
 	(-> main-routes
 		(with-security security-config authorize)
 		(wrap-stateful-session)
-		(wrap-reload '(start-clojure.templates)) ; XXX not for production
+		(wrap-reload '(smallblog.templates)) ; XXX not for production
 		(wrap-stacktrace)
 		(wrap-params)
 		(wrap-json-params)))
