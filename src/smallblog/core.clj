@@ -48,31 +48,30 @@
 	(str "permission denied page"))
 
 (def security-config
-	[#"/api/blog/" :admin
-	 #"/blog/.*/post/new" #{:admin :owner}
-	 #"/api/blog/.*/post/" #{:admin :owner}
-	 #"/login-redirect" #{:admin :owner}
+	[#"/api/blog/" #{:admin :user}
+	 #"/blog/.*/post/new" #{:admin :user}
+	 #"/api/blog/.*/post/" #{:admin :user}
+	 #"/login-redirect" #{:admin :user}
 	 #".*" :any])
 
+; XXX call login-for-session
 (defn authorize [request]
 	(let [form-params (:form-params request)
 			username (get form-params "email")
 			password (get form-params "password")]
 		(if (and (not (nil? username)) (not (nil? password)))
-			(binding [*sandbar-current-user*
-					{:name username :roles [:owner] :password password}]
-				(session-put! :current-user *sandbar-current-user*)
-				*sandbar-current-user*)
+			(data/establish-session username password)
 			(let [redirect-url (str templates/*login-url* "?url="
 							(url-encode (:uri request)))] 
 				(redirect redirect-url)))))
 
 
+(def permission-denied-uri "/permission-denied")
 
 (defroutes main-routes
 	(GET "/" [] (index-page))
 
-	(GET "/permission-denied" [] (permission-denied))
+	(GET permission-denied-uri [] (permission-denied))
 	(GET "/logout" [] (logout! {}))
 	(GET templates/*login-url* [url] (templates/login {:url url}))
 	(POST templates/*login-redirect-url* [url] (do
@@ -84,22 +83,35 @@
 	(GET "/blog/:bid/post/" [bid]
 		(render-html-posts (data/get-posts (Integer/parseInt bid) 10 0)))
 	(GET "/blog/:bid/post/new" [bid]
-		(render-html-newpost))
+		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
+				(:roles (data/get-current-user))))
+			(redirect permission-denied-uri)
+			(render-html-newpost)))
 	(POST "/blog/:bid/post/new" [bid title content]
-		(data/make-post (Integer/parseInt bid) title content)
-		(str "XXX should redirect or something title " title " content " content))
+		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
+				(:roles (data/get-current-user))))
+			(redirect permission-denied-uri)
+			(do
+				(data/make-post (Integer/parseInt bid) title content)
+				(str "XXX should redirect or something title " title
+						" content " content))))
 
 
 	(POST "/api/blog/" [title]
-		(json-response (render-blog-json (data/make-blog title))))
+		(let [userid (:id (data/get-current-user))]
+			(json-response (render-blog-json
+					(data/make-blog userid title)))))
 
 	(GET "/api/blog/:bid/post/" [bid]
 		(let [bid (Integer/parseInt bid)]
 			(json-response (doall (for [post (data/get-posts bid 10 0)]
 					(render-post-json post))))))
 	(POST "/api/blog/:bid/post/" [bid title content]
-		(json-response (render-post-json
-			(data/make-post (Integer/parseInt bid) title content))))
+		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
+				(:roles (data/get-current-user))))
+			(redirect permission-denied-uri)
+			(json-response (render-post-json
+				(data/make-post (Integer/parseInt bid) title content)))))
 	; (GET "/api/post/:id" [id]
 	; 	(json-response (data/get-post id)))
 	; (PUT "/api/post/:id" [id]

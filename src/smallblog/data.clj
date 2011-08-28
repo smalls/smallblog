@@ -52,7 +52,6 @@
 		nil))
 
 ; XXX only return if the password matches
-; XXX should return an owner record per blog; owner-blogid or something
 (defn get-login [email password]
 	(sql/with-connection *db*
 		(sql/with-query-results rs ["select * from login where email=?" email]
@@ -73,7 +72,7 @@
 (defn login-for-session [email password]
 	(let [login (get-login email password)]
 		{:id (:id login) :name (:email login)
-				:roles (get-roles-for-user (:id login))}))
+				:roles (concat (get-roles-for-user (:id login)) [:user])}))
 
 (defn establish-session [email password]
 	(binding [*sandbar-current-user*

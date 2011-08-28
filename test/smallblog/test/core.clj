@@ -3,9 +3,11 @@
 				[clojure.test]
 				[clojure.string :only (join)]
 				[clojure.contrib.string :only (substring?)]
-				[clj-time.core :only (now date-time)])
+				[clj-time.core :only (now date-time)]
+				[sandbar.auth :only (*sandbar-current-user*)])
 	(:require	[clj-json.core :as json]
-				[smallblog.data :as data]))
+				[smallblog.data :as data]
+				[smallblog.templates :as templates]))
 
 (defn request-get [resource web-app & params]
  	(web-app {:request-method :get :uri resource :params (first params)}))
@@ -17,24 +19,35 @@
 	(let [response-body (:body response)]
 		(json/parse-string response-body true)))
 
-(defn with-blog-id
+(defn with-login-and-blog-id
 	"calls func with the first argument of blogid and then the rest of the
 	arguments"
 	[func]
-	(let [url (str "/api/blog/")
-			response (request-post url main-routes {:title "blog title"})
-			response-body (parse-json-body response)
-			blogid (:id response-body)
-			args '()]
+	(let [username (str (now) "@test.com")
+			password "foobar"
+			loginid (data/make-login username password)]
 		(try
-			(is (= 200 (:status response)) (str "request failed " url))
-			(is (= 200 (:status (request-get (str "/api/blog/" blogid "/post/")
-					main-routes))))
-			(apply func blogid args)
-			(finally (data/delete-blog blogid)))))
+			(binding [*sandbar-current-user*
+						(data/login-for-session username password)]
+				(let [url (str "/api/blog/")
+						response (request-post url main-routes
+								{:title "blog title"})]
+					(binding [*sandbar-current-user*
+								(data/login-for-session username password)]
+		 				(let [response-body (parse-json-body response)
+								blogid (:id response-body)
+								args '()]
+							(try
+								(is (= 200 (:status response))
+										(str "request failed " url))
+								(is (= 200 (:status (request-get
+										(str "/api/blog/" blogid "/post/") main-routes))))
+								(apply func loginid blogid args)
+								(finally (data/delete-blog blogid)))))))
+			(finally (data/delete-login loginid)))))
 
 (deftest test-api-routes
-	(with-blog-id (fn [blogid]
+	(with-login-and-blog-id (fn [loginid, blogid]
 		(let [new-content (str "asdf new content" (now))
 				url (str "/api/blog/" blogid "/post/")
 				response-post (request-post url main-routes
@@ -56,7 +69,7 @@
 				(render-post-json post))))))
 
 (deftest test-get-html-posts []
-	(with-blog-id (fn [blogid]
+	(with-login-and-blog-id (fn [loginid, blogid]
 		(let [content (str "some new content" (now)) title (str "new title " (now))
 				response-post (request-post (str "/api/blog/" blogid "/post/")
 						main-routes {:title title :content content})
@@ -71,7 +84,7 @@
 			(is (substring? content response-body))))))
 
 (deftest test-get-markdownified-html-posts []
-	(with-blog-id (fn [blogid]
+	(with-login-and-blog-id (fn [loginid, blogid]
 		(let [nowstr (str (now))
 				reqcontent (str "some markdown content " nowstr " *italic* **bold**")
 				expcontent (str "<p>some markdown content " nowstr " <em>italic</em> <strong>bold</strong></p>")
@@ -87,10 +100,25 @@
 					expcontent response-body))))))
 
 (deftest test-get-login []
-	(let [response-get (request-get "/login")]
+	(let [response-get (request-get templates/*login-url* main-routes)]
 		(is (= 200 (:status response-get)))
-		(is (substring? "action=\"login\"" (:body response-get))))
-	(let [url "foobarbaz"
-			response-get (request-get (str "/login?url=" url))]
-		(is (= 200 (:status response-get)))
-		(is (substring? (str "action=\"" url "\"") (:body response-get)))))
+		(is (substring? (str "action=\"" templates/*login-redirect-url* "\"")
+				(join (:body response-get))))))
+
+(deftest test-permissions []
+	(with-login-and-blog-id (fn [loginid, blogid]
+		(let [noperm_username (str (now) "@test.com")
+				noperm_password "foobar"
+				noperm_loginid (data/make-login noperm_username noperm_password)]
+			(try
+				(let [response-get (request-get (str "/blog/" blogid "/post/new")
+						main-routes)]
+					(is (= 200 (:status response-get))))
+					(binding [*sandbar-current-user*
+							(data/login-for-session noperm_username noperm_password)]
+						(let [response-get (request-get (str "/blog/" blogid "/post/new")
+								main-routes)]
+							(is (= 302 (:status response-get)))
+							(is (substring? permission-denied-uri
+									(join (:headers response-get))))))
+				(finally (data/delete-login noperm_loginid)))))))
