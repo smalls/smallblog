@@ -1,4 +1,6 @@
 (ns smallblog.data
+	(:use		[sandbar.auth :only (current-user, *sandbar-current-user*)]
+				[sandbar.stateful-session :only (session-put!)])
 	(:require	[clj-sql.core :as sql]))
 
 #_ (comment
@@ -6,27 +8,27 @@
 		bash$ createdb smallblog
 		bash$ psql smallblog -h localhost
 		psql$
-CREATE TABLE login (
-id SERIAL,
-email TEXT NOT NULL UNIQUE,
-password TEXT NOT NULL,
-PRIMARY KEY(id)
-);
-CREATE TABLE blog (
-id SERIAL,
-owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-title TEXT NOT NULL,
-created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-PRIMARY KEY(id)
-);
-CREATE TABLE post (
-id BIGSERIAL,
-blogid int NOT NULL REFERENCES blog(id) ON DELETE CASCADE,
-title TEXT NOT NULL,
-content TEXT NOT NULL,
-created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-PRIMARY KEY(id)
-);
+		CREATE TABLE login (
+			id SERIAL,
+			email TEXT NOT NULL UNIQUE,
+			password TEXT NOT NULL,
+			PRIMARY KEY(id)
+		);
+		CREATE TABLE blog (
+			id SERIAL,
+			owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+			title TEXT NOT NULL,
+			created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
+			PRIMARY KEY(id)
+		);
+		CREATE TABLE post (
+			id BIGSERIAL,
+			blogid int NOT NULL REFERENCES blog(id) ON DELETE CASCADE,
+			title TEXT NOT NULL,
+			content TEXT NOT NULL,
+			created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
+			PRIMARY KEY(id)
+		);
 
 	   misc postgres notes
 		   ;to describe a table: psql$ \d+ tablename
@@ -42,12 +44,42 @@ PRIMARY KEY(id)
 				;:password		"apw"
 			}))
 
+(defn get-current-user
+	"gets the current user, or nil if none is defined"
+	[]
+	(if-let [user (current-user)]
+		(current-user)
+		nil))
 
 ; XXX only return if the password matches
+; XXX should return an owner record per blog; owner-blogid or something
 (defn get-login [email password]
 	(sql/with-connection *db*
 		(sql/with-query-results rs ["select * from login where email=?" email]
 			(first rs))))
+
+(def owner-blog-prefix "owner-blog-")
+(defn -role-keywords [a]
+	(if (empty? a)
+		[]
+		(concat [(keyword (str owner-blog-prefix (:id (first a))))]
+			(-role-keywords (rest a)))))
+
+(defn get-roles-for-user [userid]
+	(sql/with-connection *db*
+		(sql/with-query-results rs ["select id from blog where owner=?" userid]
+			(-role-keywords rs))))
+
+(defn login-for-session [email password]
+	(let [login (get-login email password)]
+		{:id (:id login) :name (:email login)
+				:roles (get-roles-for-user (:id login))}))
+
+(defn establish-session [email password]
+	(binding [*sandbar-current-user*
+			(login-for-session email password)]
+		(session-put! :current-user *sandbar-current-user*)
+		*sandbar-current-user*))
 
 (defn make-login
 	"creates a new login and returns the id (instead of a populated object)"

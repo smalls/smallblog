@@ -1,21 +1,62 @@
 (ns smallblog.test.data
 	(:use		[smallblog.core]
 				[clojure.test]
+				[sandbar.auth :only (*sandbar-current-user*)]
+				[sandbar.stateful-session :only (sandbar-session)]
 				[clj-time.core :only (now)])
 	(:require	[smallblog.data :as data]
 				[clj-sql.core :as sql]))
 
-(deftest login
+(deftest test-login
+	"test basic creation and retrival of login rows, and test-login-for-session"
+	[]
+	(let [login (str (now) "newlogin@foo.com")
+			password "somepassword"
+			loginid (data/make-login login password)]
+		(try
+			(let [blogobj1 (data/make-blog loginid "foo")
+					blogobj2 (data/make-blog loginid "bar")
+					expectedowner1 (keyword (str data/owner-blog-prefix
+								(:id blogobj1)))
+					expectedowner2 (keyword (str data/owner-blog-prefix
+								(:id blogobj2)))
+					loginobj (data/get-login login password)
+					loginsession (data/login-for-session login password)]
+
+				; first, regular login
+				(is (= loginid (:id loginobj)))
+				(is (= login (:email loginobj)))
+				(is (= password (:password loginobj)))
+
+				; now login-session
+				(is (= loginid (:id loginsession)))
+				(is (= login (:name loginsession)))
+				(is (= nil (:password loginsession)))
+				(is (= expectedowner1 (nth (:roles loginsession) 0)))
+				(is (= expectedowner2 (nth (:roles loginsession) 1))))
+			(finally (data/delete-login loginid)))))
+
+(deftest test-role-keywords
+	"test the -role-keywords method"
+	[]
+	(is (= [:owner-blog-1 :owner-blog-2]
+		(data/-role-keywords '({:id 1} {:id 2}))))
+	(is (= [] (data/-role-keywords '()))))
+
+(deftest test-get-owned-blogs
 	"test basic creation and retrival of login rows"
 	[]
 	(let [login (str (now) "newlogin@foo.com")
 			password "somepassword"
 			loginid (data/make-login login password)]
 		(try
-			(let [loginobj (data/get-login login password)]
-				(is (= loginid (:id loginobj)))
-				(is (= login (:email loginobj)))
-				(is (= password (:password loginobj))))
+			(let [blogobj1 (data/make-blog loginid "foo")
+					blogobj2 (data/make-blog loginid "bar")
+					blogids (data/get-roles-for-user loginid)]
+				(is (= (keyword (str data/owner-blog-prefix (:id blogobj1)))
+						(nth blogids 0)))
+				(is (= (keyword (str data/owner-blog-prefix (:id blogobj2)))
+						(nth blogids 1))))
 			(finally (data/delete-login loginid)))))
 
 (deftest post
@@ -70,4 +111,15 @@
 				(is (= 2 (count result)))
 				(is (= content2 (get (first result) :content)))
 				(is (= content1 (get (second result) :content))))
+			(finally (data/delete-login loginid)))))
+
+(deftest test-get-current-userid
+	"test getting the current user's id"
+	(let [email (str (now) "@test.com")
+			password "password"
+			loginid (data/make-login email password)]
+		(try 
+			(binding [*sandbar-current-user*
+					(data/login-for-session email password)]
+				(is (not (nil? (data/get-current-user)))))
 			(finally (data/delete-login loginid)))))
