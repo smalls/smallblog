@@ -17,7 +17,7 @@
 				[clj-json.core :as json]))
 
 (defn index-page []
-	(str "hi hi hi"))
+	(str "hi hi hi <a href=\"http://localhost:3000/blog/67/post/\">link</a>"))
 
 (defn json-response [data & [status]]
 	{:status (or status 200)
@@ -37,10 +37,12 @@
 					(clj-time-coerce/from-date (:created_date blog)))})
 
 (defn render-html-posts [posts]
-	(templates/main {:blogname "first blog name", :posts posts}))
+	(templates/main {:blogname "first blog name", :posts posts
+				:user (data/get-current-user)}))
 
 (defn render-html-newpost []
-	(templates/newpost {:blogname "first blog name"}))
+	(templates/newpost {:blogname "first blog name"
+				:user (data/get-current-user)}))
 
 
 
@@ -54,7 +56,6 @@
 	 #"/login-redirect" #{:admin :user}
 	 #".*" :any])
 
-; XXX call login-for-session
 (defn authorize [request]
 	(let [form-params (:form-params request)
 			username (get form-params "email")
@@ -72,12 +73,12 @@
 	(GET "/" [] (index-page))
 
 	(GET permission-denied-uri [] (permission-denied))
-	(GET "/logout" [] (logout! {}))
+	(GET templates/*logout-url* [] (logout! {}))
 	(GET templates/*login-url* [url] (templates/login {:url url}))
-	(POST templates/*login-redirect-url* [url] (do
+	(POST templates/*login-redirect-url* [url]
 			(if (nil? url)
 				(redirect-after-post "/")
-				(redirect-after-post url))))
+				(redirect-after-post url)))
 	
 
 	(GET "/blog/:bid/post/" [bid]
@@ -123,8 +124,8 @@
 (def app
 	(-> main-routes
 		(with-security security-config authorize)
-		(wrap-stateful-session)
-		(wrap-reload '(smallblog.templates)) ; XXX not for production
+		wrap-stateful-session
+		;(wrap-reload '(smallblog.templates)) ; XXX not for production
 		(wrap-stacktrace)
 		(wrap-params)
 		(wrap-json-params)))

@@ -6,8 +6,10 @@
 					[clj-time.coerce :as clj-time-coerce])
 	(:import (org.mozilla.javascript Context ScriptableObject)))
 
+; when changing these, also check snippets.html
 (def *login-url* "/login")
 (def *login-redirect-url* "/login-redirect")
+(def *logout-url* "/logout")
 
 (def date-output-format (clj-time-format/formatter "dd MMM yyyy HH:mm"))
 
@@ -27,10 +29,32 @@
 				(Context/toString result))
 		(finally (Context/exit)))))
 
+(html/defsnippet valid-user-menu
+	"smallblog/templates/snippets.html"
+	[:#valid-user-menu]
+	[ctx])
+
+(html/defsnippet no-user-menu
+	"smallblog/templates/snippets.html"
+	[:#no-user-menu]
+	[ctx])
+
+; XXX login doesn't redirect properly
+(defn user-menu [ctx]
+	(try
+		(if (nil? (:user ctx))
+			(no-user-menu ctx)
+			(valid-user-menu ctx))
+		(catch Exception e
+	  		(println "caught it" e)
+			(.printStackTrace e)
+	  		(println "foo"))))
+
 (html/deftemplate main "smallblog/templates/main.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx))
+	[:#menu] (html/content (user-menu ctx))
 	[:div.post] (html/clone-for [item (:posts ctx)]
 			[:.posttitle] (html/content (:title item))
 			[:.postdate] (html/content (clj-time-format/unparse date-output-format
@@ -40,12 +64,8 @@
 (html/deftemplate newpost "smallblog/templates/newpost.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
-	[:head :title] (html/content (:blogname ctx)))
-
-(html/deftemplate newpost "smallblog/templates/newpost.html"
-	[ctx]
-	[:p#blogname] (html/content (:blogname ctx))
-	[:head :title] (html/content (:blogname ctx)))
+	[:head :title] (html/content (:blogname ctx))
+	[:#menu] (html/content (user-menu ctx)))
 
 (html/deftemplate login "smallblog/templates/login.html"
 	[ctx]

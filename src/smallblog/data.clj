@@ -47,9 +47,14 @@
 (defn get-current-user
 	"gets the current user, or nil if none is defined"
 	[]
-	(if-let [user (current-user)]
-		(current-user)
-		nil))
+	(try
+		(if-let [user (current-user)]
+			user
+			nil)
+		(catch IllegalStateException e
+			; (.printStackTrace e) XXX maybe this can be removed once cookies
+				  ; are good
+			nil)))
 
 ; XXX only return if the password matches
 (defn get-login [email password]
