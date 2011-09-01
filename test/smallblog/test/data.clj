@@ -122,4 +122,6 @@
 			(binding [*sandbar-current-user*
 					(data/login-for-session email password)]
 				(is (not (nil? (data/get-current-user)))))
+			(binding [*sandbar-current-user* nil]
+				(is (nil? (data/get-current-user))))
 			(finally (data/delete-login loginid)))))
