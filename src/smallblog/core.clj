@@ -125,7 +125,7 @@
 	(-> main-routes
 		(with-security security-config authorize)
 		wrap-stateful-session
-		;(wrap-reload '(smallblog.templates)) ; XXX not for production
+		(wrap-reload '(smallblog.templates)) ; XXX not for production
 		(wrap-stacktrace)
 		(wrap-params)
 		(wrap-json-params)))
