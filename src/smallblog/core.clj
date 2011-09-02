@@ -9,6 +9,7 @@
 				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
+				[smallblog.util :as util]
 				[smallblog.data :as data]
 				[smallblog.templates :as templates]
 				[clj-time.core :as clj-time]
@@ -36,9 +37,9 @@
 					(clj-time-format/formatters :basic-date-time)
 					(clj-time-coerce/from-date (:created_date blog)))})
 
-(defn render-html-posts [posts]
+(defn render-html-posts [posts url]
 	(templates/main {:blogname "first blog name", :posts posts
-				:user (data/get-current-user)}))
+				:user (data/get-current-user) :url url}))
 
 (defn render-html-newpost []
 	(templates/newpost {:blogname "first blog name"
@@ -70,7 +71,7 @@
 (def permission-denied-uri "/permission-denied")
 
 (defroutes main-routes
-	(GET "/" [] (index-page))
+	(GET "/" (index-page))
 
 	(GET permission-denied-uri [] (permission-denied))
 	(GET templates/*logout-url* [] (logout! {}))
@@ -81,8 +82,9 @@
 				(redirect-after-post url)))
 	
 
-	(GET "/blog/:bid/post/" [bid]
-		(render-html-posts (data/get-posts (Integer/parseInt bid) 10 0)))
+	(GET "/blog/:bid/post/" [bid :as request]
+		(render-html-posts (data/get-posts (Integer/parseInt bid) 10 0)
+				(util/uri-from-request request)))
 	(GET "/blog/:bid/post/new" [bid]
 		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
 				(:roles (data/get-current-user))))

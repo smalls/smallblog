@@ -37,9 +37,12 @@
 (html/defsnippet no-user-menu
 	"smallblog/templates/snippets.html"
 	[:#no-user-menu]
-	[ctx])
+	[ctx]
+	[:#loginlink] (html/set-attr :href
+		(if (nil? (:url ctx))
+			*login-url*
+			(str *login-url* "?url=" (url-encode(:url ctx))))))
 
-; XXX login doesn't redirect properly
 (defn user-menu [ctx]
 	(try
 		(if (nil? (:user ctx))
