@@ -9,6 +9,7 @@
 				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
+				[ring.adapter.jetty :as jetty]
 				[smallblog.util :as util]
 				[smallblog.data :as data]
 				[smallblog.templates :as templates]
@@ -71,7 +72,7 @@
 (def permission-denied-uri "/permission-denied")
 
 (defroutes main-routes
-	(GET "/" (index-page))
+	(GET "/" [] (index-page))
 
 	(GET permission-denied-uri [] (permission-denied))
 	(GET templates/*logout-url* [] (logout! {}))
@@ -131,3 +132,10 @@
 		(wrap-stacktrace)
 		(wrap-params)
 		(wrap-json-params)))
+
+(defn -main []
+	(let [port (System/getenv "PORT")
+			port (if (nil? port) "3000" port)
+			port (Integer/parseInt port)]
+		(jetty/run-jetty app {:port port :ssl-port 4430
+						:keystore "devonly.keystore" :key-password "foobar"})))

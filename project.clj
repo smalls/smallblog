@@ -10,6 +10,4 @@
 							[enlive "1.0.0"]
 							[rhino/js "1.7R2"]
 							[sandbar/sandbar "0.3.0"]
-				 			[postgresql/postgresql "9.0-801.jdbc4"]]
-	:dev-dependencies	[[lein-ring "0.4.5"]]
-	:ring				{:handler smallblog.core/app})
+				 			[postgresql/postgresql "9.0-801.jdbc4"]])
