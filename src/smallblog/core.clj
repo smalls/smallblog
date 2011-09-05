@@ -98,14 +98,14 @@
 				(:roles (data/get-current-user))))
 			(redirect templates/*permission-denied-uri*)
 			(render-html-newpost)))
-	(POST "/blog/:bid/post/new" [bid title content]
+	(POST "/blog/:bid/post/new" [bid title content :as request]
 		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
 				(:roles (data/get-current-user))))
 			(redirect templates/*permission-denied-uri*)
-			(do
+			(let [this-url (:uri request)
+					to-url (subs this-url 0 (- (count this-url) 3))]
 				(data/make-post (Integer/parseInt bid) title content)
-				(str "XXX should redirect or something title " title
-						" content " content))))
+				(redirect-after-post to-url))))
 
 
 	(POST "/api/blog/" [title]

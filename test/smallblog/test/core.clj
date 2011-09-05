@@ -86,7 +86,9 @@
 			(is (substring? title response-body))
 			(is (substring? content response-body))))))
 
-(deftest test-get-markdownified-html-posts []
+(deftest test-get-markdownified-html-posts
+	"test making markdowny posts through the API and through the regular flow"
+	[]
 	(with-login-and-blog-id (fn [loginid, blogid]
 		(let [nowstr (str (now))
 				reqcontent (str "some markdown content " nowstr " *italic* **bold**")
@@ -100,6 +102,23 @@
 						main-routes)
 				response-body (join (:body response-get))]
 			(is (= 200 (:status response-post)))
+			(is (= 200 (:status response-get)))
+			(is (substring?
+					expcontent response-body)))
+		(let [nowstr (str (now))
+				reqcontent (str "some **better** markdown content " nowstr " *italic* **bold**")
+				expcontent (str "<p>some <strong>better</strong> markdown content " nowstr " <em>italic</em> <strong>bold</strong></p>")
+				title (str "new title " (now))
+				response-post (request-post :http 
+						(str "/blog/" blogid "/post/new")
+						main-routes {:title title :content reqcontent})
+				response-get (request-get :http
+						(str "/blog/" blogid "/post/")
+						main-routes)
+				response-body (join (:body response-get))]
+			(is (= 303 (:status response-post)))
+			(is (= (str "/blog/" blogid "/post/")
+					(get (:headers response-post) "Location")))
 			(is (= 200 (:status response-get)))
 			(is (substring?
 					expcontent response-body))))))
