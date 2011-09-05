@@ -105,10 +105,10 @@
 					expcontent response-body))))))
 
 (deftest test-get-login []
-	(let [response-get (request-get :https templates/*login-snippet-url*
+	(let [response-get (request-get :https templates/*login-url*
 			main-routes)]
 		(is (= 200 (:status response-get)))
-		(is (substring? (str "action=\"" templates/*login-redirect-url* "\"")
+		(is (substring? (str "action=\"" templates/*login-redirect-fqurl* "\"")
 				(join (:body response-get))))))
 
 (deftest test-permissions []

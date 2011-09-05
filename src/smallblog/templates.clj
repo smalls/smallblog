@@ -9,13 +9,11 @@
 (def *https-port* 4330)
 
 ; when changing these, also check snippets.html and core/security-config
-; XXX better names - login-url should be login-url-fullyqual, same for
-; login-redirect
-(def *login-snippet-url* "/login")
-(def *login-url* (str "https://localhost:" *https-port* *login-snippet-url*))
-(def *login-redirect-snippet-url* "/login-redirect")
-(def *login-redirect-url*
-	(str "https://localhost:" *https-port* *login-redirect-snippet-url*))
+(def *login-url* "/login")
+(def *login-fqurl* (str "https://localhost:" *https-port* *login-url*))
+(def *login-redirect-url* "/login-redirect")
+(def *login-redirect-fqurl*
+	(str "https://localhost:" *https-port* *login-redirect-url*))
 (def *logout-url* "/logout")
 (def *permission-denied-uri* "/permission-denied")
 
@@ -49,8 +47,8 @@
 	[ctx]
 	[:#loginlink] (html/set-attr :href
 		(if (nil? (:url ctx))
-			*login-url*
-			(str *login-url* "?url=" (url-encode(:url ctx))))))
+			*login-fqurl*
+			(str *login-fqurl* "?url=" (url-encode(:url ctx))))))
 
 (defn user-menu [ctx]
 	(try
@@ -83,5 +81,5 @@
 	[ctx]
 	[:#login_form] (html/set-attr :action
 		(if (nil? (:url ctx))
-			*login-redirect-url*
-			(str *login-redirect-url* "?url=" (url-encode(:url ctx))))))
+			*login-redirect-fqurl*
+			(str *login-redirect-fqurl* "?url=" (url-encode(:url ctx))))))

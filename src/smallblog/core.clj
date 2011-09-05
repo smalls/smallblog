@@ -64,7 +64,7 @@
 			password (get form-params "password")]
 		(if (and (not (nil? username)) (not (nil? password)))
 			(data/establish-session username password)
-			(let [redirect-url (str templates/*login-url* "?url="
+			(let [redirect-url (str templates/*login-fqurl* "?url="
 							(url-encode (:uri request)))] 
 				(redirect redirect-url)))))
 
@@ -78,11 +78,11 @@
 
 	(GET templates/*permission-denied-uri* [] (permission-denied))
 	(GET templates/*logout-url* [] (logout! {}))
-	(GET templates/*login-snippet-url* [url :as request]
+	(GET templates/*login-url* [url :as request]
 		(if (not (ensure-secure request))
 			{:status 403}
 			(templates/login {:url url})))
-	(POST templates/*login-redirect-snippet-url* [url :as request]
+	(POST templates/*login-redirect-url* [url :as request]
 		(if (not (ensure-secure request))
 			{:status 403}
 			(if (nil? url)
