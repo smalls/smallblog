@@ -55,7 +55,7 @@
 	[#"/api/blog/" #{:admin :user}
 	 #"/blog/.*/post/new" #{:admin :user}
 	 #"/api/blog/.*/post/" #{:admin :user}
-	 #"/login-redirect" #{:admin :user}
+	 #"/login-redirect.*" #{:admin :user}
 	 #".*" :any])
 
 (defn authorize [request]
@@ -68,19 +68,26 @@
 							(url-encode (:uri request)))] 
 				(redirect redirect-url)))))
 
+(defn ensure-secure [request]
+	(= :https (:scheme request)))
 
-(def permission-denied-uri "/permission-denied")
+
 
 (defroutes main-routes
 	(GET "/" [] (index-page))
 
-	(GET permission-denied-uri [] (permission-denied))
+	(GET templates/*permission-denied-uri* [] (permission-denied))
 	(GET templates/*logout-url* [] (logout! {}))
-	(GET templates/*login-url* [url] (templates/login {:url url}))
-	(POST templates/*login-redirect-url* [url]
+	(GET templates/*login-snippet-url* [url :as request]
+		(if (not (ensure-secure request))
+			{:status 403}
+			(templates/login {:url url})))
+	(POST templates/*login-redirect-snippet-url* [url :as request]
+		(if (not (ensure-secure request))
+			{:status 403}
 			(if (nil? url)
 				(redirect-after-post "/")
-				(redirect-after-post url)))
+				(redirect-after-post url))))
 	
 
 	(GET "/blog/:bid/post/" [bid :as request]
@@ -89,12 +96,12 @@
 	(GET "/blog/:bid/post/new" [bid]
 		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
 				(:roles (data/get-current-user))))
-			(redirect permission-denied-uri)
+			(redirect templates/*permission-denied-uri*)
 			(render-html-newpost)))
 	(POST "/blog/:bid/post/new" [bid title content]
 		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
 				(:roles (data/get-current-user))))
-			(redirect permission-denied-uri)
+			(redirect templates/*permission-denied-uri*)
 			(do
 				(data/make-post (Integer/parseInt bid) title content)
 				(str "XXX should redirect or something title " title
@@ -113,7 +120,7 @@
 	(POST "/api/blog/:bid/post/" [bid title content]
 		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
 				(:roles (data/get-current-user))))
-			(redirect permission-denied-uri)
+			(redirect templates/*permission-denied-uri*)
 			(json-response (render-post-json
 				(data/make-post (Integer/parseInt bid) title content)))))
 	; (GET "/api/post/:id" [id]
@@ -124,11 +131,15 @@
 	(route/resources "/")
 	(route/not-found "Page not found"))
 
-(def app
+(defn app [port ssl-port]
 	(-> main-routes
 		(with-security security-config authorize)
 		wrap-stateful-session
-		(wrap-reload '(smallblog.templates)) ; XXX not for production
+
+		; XXX not for production
+		(wrap-reload '(smallblog.templates)) ;, smallblog.core, smallblog.util,
+									 ;smallblog.data))
+
 		(wrap-stacktrace)
 		(wrap-params)
 		(wrap-json-params)))
@@ -136,6 +147,8 @@
 (defn -main []
 	(let [port (System/getenv "PORT")
 			port (if (nil? port) "3000" port)
-			port (Integer/parseInt port)]
-		(jetty/run-jetty app {:port port :ssl-port 4430
+			port (Integer/parseInt port)
+			ssl-port templates/*https-port*]
+		(jetty/run-jetty (app port ssl-port)
+				{:port port :ssl-port ssl-port
 						:keystore "devonly.keystore" :key-password "foobar"})))

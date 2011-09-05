@@ -4,7 +4,7 @@
 							[org.clojure/clojure-contrib "1.2.0"]
 							[ring "0.3.11"]
 							[ring-json-params "0.1.3"]
-  				 			[compojure "0.6.4"]
+  				 			[compojure "0.6.5"]
 							[clj-time "0.3.0"]
 				 			[clj-sql "0.0.5"]
 							[enlive "1.0.0"]

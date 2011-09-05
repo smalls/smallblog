@@ -9,11 +9,13 @@
 				[smallblog.data :as data]
 				[smallblog.templates :as templates]))
 
-(defn request-get [resource web-app & params]
- 	(web-app {:request-method :get :uri resource :params (first params)}))
+(defn request-get [scheme resource web-app & params]
+ 	(web-app {:request-method :get :scheme scheme
+			:uri resource :params (first params)}))
 
-(defn request-post [resource web-app & params]
- 	(web-app {:request-method :post :uri resource :params (first params)}))
+(defn request-post [scheme resource web-app & params]
+ 	(web-app {:request-method :post :scheme scheme
+			:uri resource :params (first params)}))
 
 (defn parse-json-body [response]
 	(let [response-body (:body response)]
@@ -30,7 +32,7 @@
 			(binding [*sandbar-current-user*
 						(data/login-for-session username password)]
 				(let [url (str "/api/blog/")
-						response (request-post url main-routes
+						response (request-post :https url main-routes
 								{:title "blog title"})]
 					(binding [*sandbar-current-user*
 								(data/login-for-session username password)]
@@ -40,7 +42,7 @@
 							(try
 								(is (= 200 (:status response))
 										(str "request failed " url))
-								(is (= 200 (:status (request-get
+								(is (= 200 (:status (request-get :http
 										(str "/api/blog/" blogid "/post/") main-routes))))
 								(apply func loginid blogid args)
 								(finally (data/delete-blog blogid)))))))
@@ -50,9 +52,9 @@
 	(with-login-and-blog-id (fn [loginid, blogid]
 		(let [new-content (str "asdf new content" (now))
 				url (str "/api/blog/" blogid "/post/")
-				response-post (request-post url main-routes
+				response-post (request-post :http url main-routes
 						{:title "mytitle" :content new-content})
-				response-get (request-get url main-routes)
+				response-get (request-get :http url main-routes)
 				body-get (:body response-get)]
 			(is (= 200 (:status response-post)))
 			(is (= 200 (:status response-get)) (str "request failed " url))
@@ -71,9 +73,10 @@
 (deftest test-get-html-posts []
 	(with-login-and-blog-id (fn [loginid, blogid]
 		(let [content (str "some new content" (now)) title (str "new title " (now))
-				response-post (request-post (str "/api/blog/" blogid "/post/")
+				response-post (request-post :http
+						(str "/api/blog/" blogid "/post/")
 						main-routes {:title title :content content})
-				response-get (request-get (str "/blog/" blogid "/post/")
+				response-get (request-get :http (str "/blog/" blogid "/post/")
 						main-routes)
 				response-body (join (:body response-get))]
 			(is (= 200 (:status response-post)))
@@ -89,9 +92,11 @@
 				reqcontent (str "some markdown content " nowstr " *italic* **bold**")
 				expcontent (str "<p>some markdown content " nowstr " <em>italic</em> <strong>bold</strong></p>")
 				title (str "new title " (now))
-				response-post (request-post (str "/api/blog/" blogid "/post/")
+				response-post (request-post :http 
+						(str "/api/blog/" blogid "/post/")
 						main-routes {:title title :content reqcontent})
-				response-get (request-get (str "/blog/" blogid "/post/")
+				response-get (request-get :http
+						(str "/blog/" blogid "/post/")
 						main-routes)
 				response-body (join (:body response-get))]
 			(is (= 200 (:status response-post)))
@@ -100,7 +105,8 @@
 					expcontent response-body))))))
 
 (deftest test-get-login []
-	(let [response-get (request-get templates/*login-url* main-routes)]
+	(let [response-get (request-get :https templates/*login-snippet-url*
+			main-routes)]
 		(is (= 200 (:status response-get)))
 		(is (substring? (str "action=\"" templates/*login-redirect-url* "\"")
 				(join (:body response-get))))))
@@ -111,14 +117,14 @@
 				noperm_password "foobar"
 				noperm_loginid (data/make-login noperm_username noperm_password)]
 			(try
-				(let [response-get (request-get (str "/blog/" blogid "/post/new")
-						main-routes)]
+				(let [response-get (request-get :http
+						(str "/blog/" blogid "/post/new") main-routes)]
 					(is (= 200 (:status response-get))))
 					(binding [*sandbar-current-user*
 							(data/login-for-session noperm_username noperm_password)]
-						(let [response-get (request-get (str "/blog/" blogid "/post/new")
-								main-routes)]
+						(let [response-get (request-get :http
+								(str "/blog/" blogid "/post/new") main-routes)]
 							(is (= 302 (:status response-get)))
-							(is (substring? permission-denied-uri
+							(is (substring? templates/*permission-denied-uri*
 									(join (:headers response-get))))))
 				(finally (data/delete-login noperm_loginid)))))))

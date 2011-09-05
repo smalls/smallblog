@@ -6,10 +6,19 @@
 					[clj-time.coerce :as clj-time-coerce])
 	(:import (org.mozilla.javascript Context ScriptableObject)))
 
-; when changing these, also check snippets.html
-(def *login-url* "/login")
-(def *login-redirect-url* "/login-redirect")
+(def *https-port* 4330)
+
+; when changing these, also check snippets.html and core/security-config
+; XXX better names - login-url should be login-url-fullyqual, same for
+; login-redirect
+(def *login-snippet-url* "/login")
+(def *login-url* (str "https://localhost:" *https-port* *login-snippet-url*))
+(def *login-redirect-snippet-url* "/login-redirect")
+(def *login-redirect-url*
+	(str "https://localhost:" *https-port* *login-redirect-snippet-url*))
 (def *logout-url* "/logout")
+(def *permission-denied-uri* "/permission-denied")
+
 
 (def date-output-format (clj-time-format/formatter "dd MMM yyyy HH:mm"))
 
