@@ -83,3 +83,8 @@
 		(if (nil? (:url ctx))
 			*login-redirect-fqurl*
 			(str *login-redirect-fqurl* "?url=" (url-encode(:url ctx))))))
+
+(html/deftemplate account "smallblog/templates/account.html"
+	[ctx]
+	[:#menu] (html/content (user-menu ctx)))
+	;[:div.blog] (html/clone-for [item (:blogs ctx)]

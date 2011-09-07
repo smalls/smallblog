@@ -46,6 +46,10 @@
 	(templates/newpost {:blogname "first blog name"
 				:user (data/get-current-user)}))
 
+(defn render-html-account []
+	(templates/account {:blogs []
+				:user (data/get-current-user)}))
+
 
 
 (defn permission-denied []
@@ -54,6 +58,7 @@
 (def security-config
 	[#"/api/blog/" #{:admin :user}
 	 #"/blog/.*/post/new" #{:admin :user}
+	 #"/account" #{:admin :user}
 	 #"/api/blog/.*/post/" #{:admin :user}
 	 #"/login-redirect.*" #{:admin :user}
 	 #".*" :any])
@@ -88,6 +93,10 @@
 			(if (nil? url)
 				(redirect-after-post "/")
 				(redirect-after-post url))))
+	(GET "/account" []
+		(if (not (ensure-secure request))
+			{:status 403}
+			(render-html-account)))
 	
 
 	(GET "/blog/:bid/post/" [bid :as request]

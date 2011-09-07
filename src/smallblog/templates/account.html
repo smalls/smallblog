@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>account</title>
+
+	<link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection">
+	<link rel="stylesheet" href="/css/blueprint/print.css" type="text/css" media="print">
+	<!--[if lt IE 8]>
+		<link rel="stylesheet" href="/css/blueprint/ie.css" type="text/css" media="screen, projection">
+	<![endif]-->
+
+	<style type="text/css">
+		div.section {margin-bottom: 60px;}
+		.textinput {width: 350px; margin-left: 20px}
+	</style>
+</head>
+<body>
+<div class="container">
+	<div id="menu" class="prepend-5 span-14 append-5 last">
+	</div>
+	<br>
+	<div class="section prepend-5 span-14 append-5 last">
+		<p id="blogname" class="large" style="text-align: center">account info</p>
+		<form method="POST" class="inline">
+			<div class="span-4">
+				<label for="email">email</label>
+			</div>
+			<div class="span-10 last">
+				<input type="text" name="email" id="email" class="textinput"
+						readonly="true" value="email@domain.com">
+			</div>
+
+			<div class="span-4">
+				<label for="oldpw">current password</label>
+			</div>
+			<div class="span-10 last">
+				<input type="password" name="oldpw" id="oldpw" class="textinput">
+			</div>
+
+			<div class="span-4">
+				<label for="newpw">new password</label>
+			</div>
+			<div class="span-10 last">
+				<input type="password" name="newpw" id="newpw" class="textinput">
+			</div>
+
+			<div class="span-4">
+				<label for="confirmpw">confirm password</label>
+			</div>
+			<div class="span-10 last">
+				<input type="password" name="confirmpw" id="confirmpw"
+						class="textinput">
+			</div>
+
+			<input type="submit" value="submit">
+		</form>
+	</div>
+
+	<div class="section prepend-5 span-14 append-5 last">
+		<p class="large" style="text-align: center">new blog</p>
+		<form method="POST" class="inline">
+			<div class="span-4">
+				<label for="blogtitle">blog title</label>
+			</div>
+			<div class="span-10 last">
+				<input type="text" name="blogtitle" id="blogtitle"
+						class="textinput">
+			</div>
+			<input type="submit" value="submit">
+		</form>
+	</div>
+
+	<div class="prepend-5 span-14 append-5 last">
+		<p class="large" style="text-align: center">current blogs</p>
+	</div>
+
+	<div class="blog prepend-5 span-14 append-5 last">
+		<div class="blogtitle">blog title</div>
+	</div>
+</div>
+</body>
