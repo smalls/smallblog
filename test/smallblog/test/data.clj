@@ -52,11 +52,15 @@
 		(try
 			(let [blogobj1 (data/make-blog loginid "foo")
 					blogobj2 (data/make-blog loginid "bar")
-					blogids (data/get-roles-for-user loginid)]
+					blogids (data/get-roles-for-user loginid)
+					blogs (data/get-blogs loginid)]
 				(is (= (keyword (str data/owner-blog-prefix (:id blogobj1)))
 						(nth blogids 0)))
 				(is (= (keyword (str data/owner-blog-prefix (:id blogobj2)))
-						(nth blogids 1))))
+						(nth blogids 1)))
+				(is (= 2 (count blogs)))
+				(is (= "foo" (:title (first blogs))))
+				(is (= "bar" (:title (last blogs)))))
 			(finally (data/delete-login loginid)))))
 
 (deftest post

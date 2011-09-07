@@ -86,5 +86,7 @@
 
 (html/deftemplate account "smallblog/templates/account.html"
 	[ctx]
-	[:#menu] (html/content (user-menu ctx)))
-	;[:div.blog] (html/clone-for [item (:blogs ctx)]
+	[:#email] (html/set-attr :value (:name (:user ctx)))
+	[:#menu] (html/content (user-menu ctx))
+	[:div.blog] (html/clone-for [item (:blogs ctx)]
+			[:.blogtitle] (html/content (:title item))))

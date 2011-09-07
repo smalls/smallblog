@@ -39,16 +39,17 @@
 					(clj-time-coerce/from-date (:created_date blog)))})
 
 (defn render-html-posts [posts url]
-	(templates/main {:blogname "first blog name", :posts posts
+	(templates/main {:blogname "XXX first blog name", :posts posts
 				:user (data/get-current-user) :url url}))
 
 (defn render-html-newpost []
-	(templates/newpost {:blogname "first blog name"
+	(templates/newpost {:blogname "XXX first blog name"
 				:user (data/get-current-user)}))
 
 (defn render-html-account []
-	(templates/account {:blogs []
-				:user (data/get-current-user)}))
+	(let [userid (:id (data/get-current-user))]
+		(templates/account {:blogs (data/get-blogs userid)
+					:user (data/get-current-user)})))
 
 
 
@@ -93,7 +94,7 @@
 			(if (nil? url)
 				(redirect-after-post "/")
 				(redirect-after-post url))))
-	(GET "/account" []
+	(GET "/account" [:as request]
 		(if (not (ensure-secure request))
 			{:status 403}
 			(render-html-account)))
@@ -121,7 +122,6 @@
 		(let [userid (:id (data/get-current-user))]
 			(json-response (render-blog-json
 					(data/make-blog userid title)))))
-
 	(GET "/api/blog/:bid/post/" [bid]
 		(let [bid (Integer/parseInt bid)]
 			(json-response (doall (for [post (data/get-posts bid 10 0)]
