@@ -13,7 +13,7 @@
 (def *login-url* "/login")
 (def *login-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
 (def *account-url* "/account")
-(def *account-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
+(def *account-fqurl* (str "https://" *server* ":" *https-port* *account-url*))
 (def *login-redirect-url* "/login-redirect")
 (def *login-redirect-fqurl*
 	(str "https://localhost:" *https-port* *login-redirect-url*))
@@ -42,7 +42,8 @@
 (html/defsnippet valid-user-menu
 	"smallblog/templates/snippets.html"
 	[:#valid-user-menu]
-	[ctx])
+	[ctx]
+	[:#accountlink] (html/set-attr :href *account-fqurl*))
 
 (html/defsnippet no-user-menu
 	"smallblog/templates/snippets.html"
