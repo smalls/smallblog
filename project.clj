@@ -10,4 +10,5 @@
 							[enlive "1.0.0"]
 							[rhino/js "1.7R2"]
 							[sandbar/sandbar "0.3.0"]
+							[org.mindrot/jbcrypt "0.3m"]
 				 			[postgresql/postgresql "9.0-801.jdbc4"]])

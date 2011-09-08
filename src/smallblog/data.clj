@@ -1,7 +1,8 @@
 (ns smallblog.data
 	(:use		[sandbar.auth :only (current-user, *sandbar-current-user*)]
 				[sandbar.stateful-session :only (session-put!)])
-	(:require	[clj-sql.core :as sql]))
+	(:require	[clj-sql.core :as sql])
+	(:import	[org.mindrot.jbcrypt BCrypt]))
 
 #_ (comment
 	postgres
@@ -56,11 +57,21 @@
 				  ; are good
 			nil)))
 
-; XXX only return if the password matches
-(defn get-login [email password]
+(defn -hash-pw [password]
+	(BCrypt/hashpw password (BCrypt/gensalt)))
+
+(defn -check-hashed [password hashed]
+	(BCrypt/checkpw password hashed))
+
+(defn get-login
+	"return the login object if (email, password) points to a valid user"
+	[email password]
 	(sql/with-connection *db*
 		(sql/with-query-results rs ["select * from login where email=?" email]
-			(first rs))))
+			(let [login (first rs)]
+				(if (-check-hashed password (:password login))
+					login
+					nil)))))
 
 (defn check-password
 	"check to make sure the passwords are equal, and if the email parameter
@@ -90,8 +101,10 @@
 
 (defn login-for-session [email password]
 	(let [login (get-login email password)]
-		{:id (:id login) :name (:email login)
-				:roles (concat (get-roles-for-user (:id login)) [:user])}))
+		(if (nil? login)
+			nil
+			{:id (:id login) :name (:email login)
+					:roles (concat (get-roles-for-user (:id login)) [:user])})))
 
 (defn establish-session [email password]
 	(binding [*sandbar-current-user*
@@ -108,7 +121,7 @@
 	(let [loginid (:id (get-login email password))]
 		(sql/with-connection *db*
 			(sql/update-values :login ["id=?" loginid]
-					{:password newpassword}))))
+					{:password (-hash-pw newpassword)}))))
 
 (defn make-login
 	"creates a new login and returns the id (instead of a populated object).
@@ -118,7 +131,8 @@
 		(make-login email password))
 	([email password]
 		(sql/with-connection *db*
-			(sql/insert-record :login {:email email :password password}))))
+			(sql/insert-record :login {:email email
+						:password (-hash-pw password)}))))
 
 (defn delete-login [id]
 	(sql/with-connection *db*

@@ -9,7 +9,7 @@
 
 (deftest test-login
 	"test basic creation and retrival of login rows, test-login-for-session,
-	and check-passwords"
+	get-login, and check-passwords"
 	[]
 	(let [login (str (now) "newlogin@test-login.com")
 			password "somepassword"
@@ -22,12 +22,17 @@
 					expectedowner2 (keyword (str data/owner-blog-prefix
 								(:id blogobj2)))
 					loginobj (data/get-login login password)
+					login-wrong-pw (data/get-login login "foo")
 					loginsession (data/login-for-session login password)]
 
 				; first, regular login
 				(is (= loginid (:id loginobj)))
 				(is (= login (:email loginobj)))
-				(is (= password (:password loginobj)))
+				(is (data/-check-hashed password (:password loginobj)))
+				(is (not (= password (:password loginobj))))
+
+				; a bad password should result in nil
+				(is (nil? login-wrong-pw))
 
 				; now login-session
 				(is (= loginid (:id loginsession)))
@@ -42,10 +47,8 @@
 						(data/check-password "bar" "foo")))
 				(is (thrown-with-msg? Exception #"passwords.*match"
 						(data/check-password login password "bar" "foo")))
-				; XXX
-				;(is (thrown-with-msg? Exception #"bad.*"
-				;		(data/check-password login password "foo" "foo")))
-				)
+				(is (thrown-with-msg? Exception #"bad.*"
+						(data/check-password login "bar" "foo" "foo"))))
 			(finally (data/delete-login loginid)))))
 
 (deftest test-change-password
@@ -152,3 +155,9 @@
 			(binding [*sandbar-current-user* nil]
 				(is (nil? (data/get-current-user))))
 			(finally (data/delete-login loginid)))))
+
+(deftest test-password-hash []
+	(let [hashed (data/-hash-pw "foo")]
+		(is (not (= hashed "foo")))
+		(is (data/-check-hashed "foo" hashed))
+		(is (not (data/-check-hashed "fooo" hashed)))))
