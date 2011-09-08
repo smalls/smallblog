@@ -92,11 +92,15 @@
 (deftest post
 	"test basic creation of posts - including (make-post), (get-posts 1 0), and (get-post id)"
 	[]
-	(let [content (str "some content " (now))
+	(let [content (str "some **content** " (now))
+			expected-markdown-content "<p>some <strong>content</strong>"
 			loginid (data/make-login (str (now) "@test.com") "password")
 			blogid (:id (data/make-blog loginid "blogname"))]
 	 	(try
 			(let [new-row (data/make-post blogid "text" content)]
+				(is (= expected-markdown-content
+					(subs (:converted_content new-row) 0
+						(count expected-markdown-content))))
 				(is (= content (:content new-row))))
 			(let [result (data/get-posts blogid 2 0)]
 				(is (= 1 (count result)))

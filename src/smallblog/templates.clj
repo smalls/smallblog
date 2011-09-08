@@ -76,7 +76,7 @@
 			[:.posttitle] (html/content (:title item))
 			[:.postdate] (html/content (clj-time-format/unparse date-output-format
 					(clj-time-coerce/from-date (:created_date item))))
-			[:.postbody] (html/html-content (markdownify (:content item)))))
+			[:.postbody] (html/html-content (:converted_content item))))
 
 (html/deftemplate newpost "smallblog/templates/newpost.html"
 	[ctx]

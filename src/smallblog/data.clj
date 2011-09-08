@@ -1,5 +1,6 @@
 (ns smallblog.data
-	(:use		[sandbar.auth :only (current-user, *sandbar-current-user*)]
+	(:use		[smallblog.templates :only (markdownify)]
+				[sandbar.auth :only (current-user, *sandbar-current-user*)]
 				[sandbar.stateful-session :only (session-put!)])
 	(:require	[clj-sql.core :as sql])
 	(:import	[org.mindrot.jbcrypt BCrypt]))
@@ -27,6 +28,7 @@
 			blogid int NOT NULL REFERENCES blog(id) ON DELETE CASCADE,
 			title TEXT NOT NULL,
 			content TEXT NOT NULL,
+			converted_content TEXT NOT NULL,
 			created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
 			PRIMARY KEY(id)
 		);
@@ -176,5 +178,7 @@
 
 (defn make-post [blogid, title, content]
 	(sql/with-connection *db*
-		(let [id (sql/insert-record :post {:title title :content content :blogid blogid})]
+		(let [id (sql/insert-record :post
+					{:title title :content content :blogid blogid
+						:converted_content (markdownify content)})]
 			(get-post blogid id))))
