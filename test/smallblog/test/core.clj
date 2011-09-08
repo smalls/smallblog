@@ -170,3 +170,19 @@
 							{} {"oldpw" oldpw "newpw" newpw "confirmpw" newpw})]
 			(is (= 303 (:status response-post)))
 			(is (substring? "/account" (join (:headers response-post)))))))))
+
+(deftest test-post-signup
+	"test POST requests to signup"
+	[]
+	(with-login-and-blog-id (fn [loginid, blogid]
+		(let [newemail (str (now) "@foo.com")
+				newpassword (str (now))
+				response-post (request-post :https "/signup" main-routes
+							{:email newemail :newpw newpassword
+								:confirmpw newpassword})
+				newloginid (:id (data/get-login newemail newpassword))]
+			(try
+				(is (= 303 (:status response-post)))
+				(is (substring? "/account" (join (:headers response-post))))
+				(is (not (nil? newloginid)))
+				(finally (data/delete-login loginid)))))))

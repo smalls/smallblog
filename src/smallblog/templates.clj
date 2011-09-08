@@ -12,6 +12,8 @@
 ; when changing these, also check snippets.html and core/security-config
 (def *login-url* "/login")
 (def *login-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
+(def *signup-url* "/signup")
+(def *signup-fqurl* (str "https://" *server* ":" *https-port* *signup-url*))
 (def *account-url* "/account")
 (def *account-fqurl* (str "https://" *server* ":" *https-port* *account-url*))
 (def *login-redirect-url* "/login-redirect")
@@ -49,6 +51,7 @@
 	"smallblog/templates/snippets.html"
 	[:#no-user-menu]
 	[ctx]
+	[:#signuplink] (html/set-attr :href *signup-fqurl*)
 	[:#loginlink] (html/set-attr :href
 		(if (nil? (:url ctx))
 			*login-fqurl*
@@ -94,3 +97,7 @@
 	[:#menu] (html/content (user-menu ctx))
 	[:div.blog] (html/clone-for [item (:blogs ctx)]
 			[:.blogtitle] (html/content (:title item))))
+
+(html/deftemplate signup "smallblog/templates/signup.html"
+	[ctx]
+	[:#menu] (html/content (user-menu ctx)))

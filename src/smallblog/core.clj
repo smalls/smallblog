@@ -51,6 +51,9 @@
 		(templates/account {:blogs (data/get-blogs userid)
 					:user (data/get-current-user)})))
 
+(defn render-html-signup []
+	(templates/signup {}))
+
 
 
 (defn permission-denied []
@@ -118,6 +121,16 @@
 					:else (do
 	  					(println "XXX should be a log not a print" request)
 						{:status 401 :body "bad form parameters"})))))
+	(GET templates/*signup-url* [:as request]
+		(if (not (ensure-secure request))
+			{:status 403}
+			(render-html-signup)))
+	(POST templates/*signup-url* [email newpw confirmpw :as request]
+		(if (not (ensure-secure request))
+			{:status 403}
+			(do
+				(data/make-login email newpw)
+				(redirect-after-post templates/*account-fqurl*))))
 	
 
 	(GET "/blog/:bid/post/" [bid :as request]
