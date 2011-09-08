@@ -36,16 +36,26 @@
 				(is (= expectedowner1 (nth (:roles loginsession) 0)))
 				(is (= expectedowner2 (nth (:roles loginsession) 1)))
 
-				(data/check-password password password)
-				(data/check-password login password password)
+				(data/check-password "foo" "foo")
+				(data/check-password login password "foo" "foo")
 				(is (thrown-with-msg? Exception #"passwords.*match"
-						(data/check-password password "foo")))
+						(data/check-password "bar" "foo")))
 				(is (thrown-with-msg? Exception #"passwords.*match"
-						(data/check-password login password "foo")))
+						(data/check-password login password "bar" "foo")))
+				; XXX
 				;(is (thrown-with-msg? Exception #"bad.*"
-				;		(data/check-password login "foo" "foo")))
+				;		(data/check-password login password "foo" "foo")))
 				)
 			(finally (data/delete-login loginid)))))
+
+(deftest test-change-password
+	[]
+	(let [login (str (now) "newlogin@foo.com")
+			password "somepassword"
+			loginid (data/make-login login password)]
+		(data/change-password login password "foo" "foo")
+		(is (not (nil? (data/get-login login "foo"))))))
+
 
 (deftest test-role-keywords
 	"test the -role-keywords method"

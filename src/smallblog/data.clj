@@ -66,9 +66,10 @@
 	"check to make sure the passwords are equal, and if the email parameter
 	exists, that the password is valid for that account.  Throws exceptions on
 	error."
-	([password confirmpassword] (check-password nil password confirmpassword))
-	([email password confirmpassword]
-		(if (not (= password confirmpassword))
+	([newpassword confirmpassword]
+		(check-password nil nil newpassword confirmpassword))
+	([email password newpassword confirmpassword]
+		(if (not (= newpassword confirmpassword))
 			(throw (Exception. "passwords don't match")))
 		(if (and
 				(not (nil? email))
@@ -98,9 +99,20 @@
 		(session-put! :current-user *sandbar-current-user*)
 		*sandbar-current-user*))
 
+(defn change-password
+	"update the password after calling check-password."
+	[email password newpassword confirmpassword]
+	(if (nil? email)
+		(throw (Exception. "email was nil")))
+	(check-password email password newpassword confirmpassword)
+	(let [loginid (:id (get-login email password))]
+		(sql/with-connection *db*
+			(sql/update-values :login ["id=?" loginid]
+					{:password newpassword}))))
+
 (defn make-login
 	"creates a new login and returns the id (instead of a populated object).
-	In the 2-password form, also checks-password."
+	In the 2-password form, also check-password."
 	([email password confirm-password]
 		(check-password password confirm-password)
 		(make-login email password))

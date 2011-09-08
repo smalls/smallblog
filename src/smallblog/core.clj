@@ -110,8 +110,9 @@
 							(contains? params "confirmpw"))
 						(let [oldpw (get params "oldpw")
 								newpw (get params "newpw")
-								confirmpw (get params "confirmpw")]
-							; XXX do pw change
+								confirmpw (get params "confirmpw")
+								email (:name (data/get-current-user))]
+							(data/change-password email oldpw newpw confirmpw)
 							(redirect-after-post templates/*account-fqurl*))
 					(contains? params "blogtitle")
 						(let [blogtitle (get params "blogtitle")
