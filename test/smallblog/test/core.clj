@@ -9,13 +9,21 @@
 				[smallblog.data :as data]
 				[smallblog.templates :as templates]))
 
-(defn request-get [scheme resource web-app & params]
- 	(web-app {:request-method :get :scheme scheme
-			:uri resource :params (first params)}))
+(defn request-get
+	([scheme resource web-app]
+		(request-get scheme resource web-app {}))
+	([scheme resource web-app params]
+		(web-app {:request-method :get :scheme scheme
+				:uri resource :params params})))
 
-(defn request-post [scheme resource web-app & params]
- 	(web-app {:request-method :post :scheme scheme
-			:uri resource :params (first params)}))
+(defn request-post
+	([scheme resource web-app]
+		(request-post scheme resource web-app {} {}))
+	([scheme resource web-app params]
+		(request-post scheme resource web-app params {}))
+	([scheme resource web-app params form-params]
+		(web-app {:request-method :post :scheme scheme
+				:uri resource :params params :form-params form-params})))
 
 (defn parse-json-body [response]
 	(let [response-body (:body response)]
@@ -24,9 +32,9 @@
 (defn with-login-and-blog-id
 	"calls func with the first argument of blogid and then the rest of the
 	arguments"
-	[func]
-	(let [username (str (now) "@test.com")
-			password "foobar"
+	([func] (with-login-and-blog-id "foobar" func))
+	
+	([password, func] (let [username (str (now) "@test.com")
 			loginid (data/make-login username password)]
 		(try
 			(binding [*sandbar-current-user*
@@ -46,7 +54,7 @@
 										(str "/api/blog/" blogid "/post/") main-routes))))
 								(apply func loginid blogid args)
 								(finally (data/delete-blog blogid)))))))
-			(finally (data/delete-login loginid)))))
+			(finally (data/delete-login loginid))))))
 
 (deftest test-api-routes
 	(with-login-and-blog-id (fn [loginid, blogid]
@@ -147,3 +155,18 @@
 							(is (substring? templates/*permission-denied-uri*
 									(join (:headers response-get))))))
 				(finally (data/delete-login noperm_loginid)))))))
+
+(deftest test-post-account
+	"test POST requests to account; both forks (change pw, new blog)"
+	[]
+	(let [oldpw "foobar"] (with-login-and-blog-id oldpw (fn [loginid, blogid]
+		(let [blogtitle (str "blog title" (now))
+				response-post (request-post :https "/account" main-routes
+							{} {"blogtitle" blogtitle})]
+			(is (= 303 (:status response-post)))
+			(is (substring? "/account" (join (:headers response-post)))))
+		(let [newpw (str "newpw")
+				response-post (request-post :https "/account" main-routes
+							{} {"oldpw" oldpw "newpw" newpw "confirmpw" newpw})]
+			(is (= 303 (:status response-post)))
+			(is (substring? "/account" (join (:headers response-post)))))))))

@@ -98,6 +98,26 @@
 		(if (not (ensure-secure request))
 			{:status 403}
 			(render-html-account)))
+	(POST "/account" [:as request]
+		(if (not (ensure-secure request))
+			{:status 403}
+			(let [params (:form-params request)]
+				(cond
+					(and (contains? params "oldpw") (contains? params "newpw")
+							(contains? params "confirmpw"))
+						(let [oldpw (get params "oldpw")
+								newpw (get params "newpw")
+								confirmpw (get params "confirmpw")]
+							; XXX do pw change
+							(redirect-after-post "/account"))
+					(contains? params "blogtitle")
+						(let [blogtitle (get params "blogtitle")
+								userid (:id (data/get-current-user))]
+							(data/make-blog userid blogtitle)
+							(redirect-after-post "/account"))
+					:else (do
+	  					(println "XXX should be a log not a print" request)
+						{:status 401 :body "bad form parameters"})))))
 	
 
 	(GET "/blog/:bid/post/" [bid :as request]
