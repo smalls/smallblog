@@ -11,7 +11,7 @@
 	"test basic creation and retrival of login rows, test-login-for-session,
 	and check-passwords"
 	[]
-	(let [login (str (now) "newlogin@foo.com")
+	(let [login (str (now) "newlogin@test-login.com")
 			password "somepassword"
 			loginid (data/make-login login password)]
 		(try
@@ -50,11 +50,13 @@
 
 (deftest test-change-password
 	[]
-	(let [login (str (now) "newlogin@foo.com")
+	(let [login (str (now) "newlogin@test-change-password.com")
 			password "somepassword"
 			loginid (data/make-login login password)]
-		(data/change-password login password "foo" "foo")
-		(is (not (nil? (data/get-login login "foo"))))))
+		(try 
+			(data/change-password login password "foo" "foo")
+			(is (not (nil? (data/get-login login "foo"))))
+			(finally (data/delete-login loginid)))))
 
 
 (deftest test-role-keywords
@@ -67,7 +69,7 @@
 (deftest test-get-owned-blogs
 	"test basic creation and retrival of login rows"
 	[]
-	(let [login (str (now) "newlogin@foo.com")
+	(let [login (str (now) "newlogin@test-get-owned-blogs.com")
 			password "somepassword"
 			loginid (data/make-login login password)]
 		(try
