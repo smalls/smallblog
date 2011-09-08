@@ -94,11 +94,11 @@
 			(if (nil? url)
 				(redirect-after-post "/")
 				(redirect-after-post url))))
-	(GET "/account" [:as request]
+	(GET templates/*account-url* [:as request]
 		(if (not (ensure-secure request))
 			{:status 403}
 			(render-html-account)))
-	(POST "/account" [:as request]
+	(POST templates/*account-url* [:as request]
 		(if (not (ensure-secure request))
 			{:status 403}
 			(let [params (:form-params request)]
@@ -109,12 +109,12 @@
 								newpw (get params "newpw")
 								confirmpw (get params "confirmpw")]
 							; XXX do pw change
-							(redirect-after-post "/account"))
+							(redirect-after-post templates/*account-fqurl*))
 					(contains? params "blogtitle")
 						(let [blogtitle (get params "blogtitle")
 								userid (:id (data/get-current-user))]
 							(data/make-blog userid blogtitle)
-							(redirect-after-post "/account"))
+							(redirect-after-post templates/*account-fqurl*))
 					:else (do
 	  					(println "XXX should be a log not a print" request)
 						{:status 401 :body "bad form parameters"})))))

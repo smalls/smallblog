@@ -7,10 +7,13 @@
 	(:import (org.mozilla.javascript Context ScriptableObject)))
 
 (def *https-port* 4330)
+(def *server* "localhost")
 
 ; when changing these, also check snippets.html and core/security-config
 (def *login-url* "/login")
-(def *login-fqurl* (str "https://localhost:" *https-port* *login-url*))
+(def *login-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
+(def *account-url* "/account")
+(def *account-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
 (def *login-redirect-url* "/login-redirect")
 (def *login-redirect-fqurl*
 	(str "https://localhost:" *https-port* *login-redirect-url*))
