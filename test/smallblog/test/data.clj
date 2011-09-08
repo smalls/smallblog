@@ -8,7 +8,8 @@
 				[clj-sql.core :as sql]))
 
 (deftest test-login
-	"test basic creation and retrival of login rows, and test-login-for-session"
+	"test basic creation and retrival of login rows, test-login-for-session,
+	and check-passwords"
 	[]
 	(let [login (str (now) "newlogin@foo.com")
 			password "somepassword"
@@ -33,7 +34,17 @@
 				(is (= login (:name loginsession)))
 				(is (= nil (:password loginsession)))
 				(is (= expectedowner1 (nth (:roles loginsession) 0)))
-				(is (= expectedowner2 (nth (:roles loginsession) 1))))
+				(is (= expectedowner2 (nth (:roles loginsession) 1)))
+
+				(data/check-password password password)
+				(data/check-password login password password)
+				(is (thrown-with-msg? Exception #"passwords.*match"
+						(data/check-password password "foo")))
+				(is (thrown-with-msg? Exception #"passwords.*match"
+						(data/check-password login password "foo")))
+				;(is (thrown-with-msg? Exception #"bad.*"
+				;		(data/check-password login "foo" "foo")))
+				)
 			(finally (data/delete-login loginid)))))
 
 (deftest test-role-keywords

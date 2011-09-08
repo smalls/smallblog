@@ -129,7 +129,7 @@
 		(if (not (ensure-secure request))
 			{:status 403}
 			(do
-				(data/make-login email newpw)
+				(data/make-login email newpw confirmpw)
 				(redirect-after-post templates/*account-fqurl*))))
 	
 

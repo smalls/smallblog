@@ -62,6 +62,19 @@
 		(sql/with-query-results rs ["select * from login where email=?" email]
 			(first rs))))
 
+(defn check-password
+	"check to make sure the passwords are equal, and if the email parameter
+	exists, that the password is valid for that account.  Throws exceptions on
+	error."
+	([password confirmpassword] (check-password nil password confirmpassword))
+	([email password confirmpassword]
+		(if (not (= password confirmpassword))
+			(throw (Exception. "passwords don't match")))
+		(if (and
+				(not (nil? email))
+				(= nil (get-login email password)))
+			(throw (Exception. "bad username or password")))))
+
 (def owner-blog-prefix "owner-blog-")
 (defn -role-keywords [a]
 	(if (empty? a)
@@ -86,10 +99,14 @@
 		*sandbar-current-user*))
 
 (defn make-login
-	"creates a new login and returns the id (instead of a populated object)"
-	[email password]
-	(sql/with-connection *db*
-		(sql/insert-record :login {:email email :password password})))
+	"creates a new login and returns the id (instead of a populated object).
+	In the 2-password form, also checks-password."
+	([email password confirm-password]
+		(check-password password confirm-password)
+		(make-login email password))
+	([email password]
+		(sql/with-connection *db*
+			(sql/insert-record :login {:email email :password password}))))
 
 (defn delete-login [id]
 	(sql/with-connection *db*
