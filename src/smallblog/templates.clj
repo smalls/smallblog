@@ -55,7 +55,7 @@
 	[:#loginlink] (html/set-attr :href
 		(if (nil? (:url ctx))
 			*login-fqurl*
-			(str *login-fqurl* "?url=" (url-encode(:url ctx))))))
+			(str *login-fqurl* "?url=" (url-encode (:url ctx))))))
 
 (defn user-menu [ctx]
 	(try
@@ -67,11 +67,22 @@
 			(.printStackTrace e)
 	  		(println "foo"))))
 
+(html/defsnippet new-post-button-snippet
+	"smallblog/templates/snippets.html"
+	[:#newpost]
+	[ctx])
+
+(defn new-post-button [ctx]
+	(if (:is-blog-owner ctx)
+		(html/content (new-post-button-snippet ctx))
+		nil))
+
 (html/deftemplate main "smallblog/templates/main.html"
 	[ctx]
 	[:p#blogname] (html/content (:blogname ctx))
 	[:head :title] (html/content (:blogname ctx))
 	[:#menu] (html/content (user-menu ctx))
+	[:#newpost] (new-post-button ctx)
 	[:div.post] (html/clone-for [item (:posts ctx)]
 			[:.posttitle] (html/content (:title item))
 			[:.postdate] (html/content (clj-time-format/unparse date-output-format

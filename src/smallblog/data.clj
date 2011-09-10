@@ -1,6 +1,7 @@
 (ns smallblog.data
 	(:use		[smallblog.templates :only (markdownify)]
-				[sandbar.auth :only (current-user, *sandbar-current-user*)]
+				[sandbar.auth :only (current-user, *sandbar-current-user*,
+								allow-access?)]
 				[sandbar.stateful-session :only (session-put!)])
 	(:require	[clj-sql.core :as sql])
 	(:import	[org.mindrot.jbcrypt BCrypt]))
@@ -95,6 +96,12 @@
 		[]
 		(concat [(keyword (str owner-blog-prefix (:id (first a))))]
 			(-role-keywords (rest a)))))
+
+(defn blog-owner?
+	"does the current user own the specified blog?"
+	[blogid]
+	(allow-access? #{(keyword (str owner-blog-prefix blogid))}
+			(:roles (get-current-user))))
 
 (defn get-roles-for-user [userid]
 	(sql/with-connection *db*

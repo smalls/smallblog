@@ -38,9 +38,10 @@
 					(clj-time-format/formatters :basic-date-time)
 					(clj-time-coerce/from-date (:created_date blog)))})
 
-(defn render-html-posts [posts url]
+(defn render-html-posts [posts url blogid]
 	(templates/main {:blogname "XXX first blog name", :posts posts
-				:user (data/get-current-user) :url url}))
+				:user (data/get-current-user) :url url
+				:is-blog-owner (data/blog-owner? blogid)}))
 
 (defn render-html-newpost []
 	(templates/newpost {:blogname "XXX first blog name"
@@ -136,15 +137,17 @@
 
 	(GET "/blog/:bid/post/" [bid :as request]
 		(render-html-posts (data/get-posts (Integer/parseInt bid) 10 0)
-				(util/uri-from-request request)))
+				(util/uri-from-request request) bid))
 	(GET "/blog/:bid/post/new" [bid]
-		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
-				(:roles (data/get-current-user))))
+		(if (not (data/blog-owner? bid))
+		;(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
+		;		(:roles (data/get-current-user))))
 			(redirect templates/*permission-denied-uri*)
 			(render-html-newpost)))
 	(POST "/blog/:bid/post/new" [bid title content :as request]
-		(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
-				(:roles (data/get-current-user))))
+		(if (not (data/blog-owner? bid))
+		;(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
+		;		(:roles (data/get-current-user))))
 			(redirect templates/*permission-denied-uri*)
 			(let [this-url (:uri request)
 					to-url (subs this-url 0 (- (count this-url) 3))]
