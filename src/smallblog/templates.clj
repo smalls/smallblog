@@ -107,6 +107,8 @@
 	[:#email] (html/set-attr :value (:name (:user ctx)))
 	[:#menu] (html/content (user-menu ctx))
 	[:div.blog] (html/clone-for [item (:blogs ctx)]
+			[:.blogtitle] (html/set-attr :href
+								(str "/blog/" (:id item) "/post/"))
 			[:.blogtitle] (html/content (:title item))))
 
 (html/deftemplate signup "smallblog/templates/signup.html"
