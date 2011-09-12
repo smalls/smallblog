@@ -1,0 +1,7 @@
+/* 14 columns * 30, 12 gutters * 10, -1px each side for border */
+.textinput-14 {width: 538px; padding: 5px; border: 1px solid #BBB;}
+
+/* 10 columns * 30, 8 gutters * 10, -1px each side for border */
+.textinput-10 {width: 378px; padding: 5px; border: 1px solid #BBB;}
+
+div.section {margin-top: 60px;}
