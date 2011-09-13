@@ -4,6 +4,7 @@
 				[ring.util.codec :only (url-encode)]
 				[ring.middleware.json-params]
 				[ring.middleware.params]
+				[ring.middleware.multipart-params]
 				[ring.middleware.reload]
 				[ring.middleware.stacktrace]
 				[sandbar stateful-session auth validation])
@@ -47,9 +48,9 @@
 	(templates/newpost {:blogname "XXX first blog name"
 				:user (data/get-current-user)}))
 
-(defn render-html-account []
+(defn render-html-account [url]
 	(let [userid (:id (data/get-current-user))]
-		(templates/account {:blogs (data/get-blogs userid)
+		(templates/account {:blogs (data/get-blogs userid) :url url
 					:user (data/get-current-user)})))
 
 (defn render-html-signup []
@@ -66,6 +67,7 @@
 	 #"/account" #{:admin :user}
 	 #"/api/blog/.*/post/" #{:admin :user}
 	 #"/login-redirect.*" #{:admin :user}
+	 #"/images" #{:admin :user}
 	 #".*" :any])
 
 (defn authorize [request]
@@ -86,6 +88,7 @@
 (defroutes main-routes
 	(GET "/" [] (index-page))
 
+	; "account urls"
 	(GET templates/*permission-denied-uri* [] (permission-denied))
 	(GET templates/*logout-url* [] (logout! {}))
 	(GET templates/*login-url* [url :as request]
@@ -101,7 +104,7 @@
 	(GET templates/*account-url* [:as request]
 		(if (not (ensure-secure request))
 			{:status 403}
-			(render-html-account)))
+			(render-html-account (util/uri-from-request request))))
 	(POST templates/*account-url* [:as request]
 		(if (not (ensure-secure request))
 			{:status 403}
@@ -135,19 +138,16 @@
 				(redirect-after-post templates/*account-fqurl*))))
 	
 
+	; "post urls"
 	(GET "/blog/:bid/post/" [bid :as request]
 		(render-html-posts (data/get-posts (Integer/parseInt bid) 10 0)
 				(util/uri-from-request request) bid))
 	(GET "/blog/:bid/post/new" [bid]
 		(if (not (data/blog-owner? bid))
-		;(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
-		;		(:roles (data/get-current-user))))
 			(redirect templates/*permission-denied-uri*)
 			(render-html-newpost)))
 	(POST "/blog/:bid/post/new" [bid title content :as request]
 		(if (not (data/blog-owner? bid))
-		;(if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
-		;		(:roles (data/get-current-user))))
 			(redirect templates/*permission-denied-uri*)
 			(let [this-url (:uri request)
 					to-url (subs this-url 0 (- (count this-url) 3))]
@@ -155,6 +155,18 @@
 				(redirect-after-post to-url))))
 
 
+	; "image urls"
+	(wrap-multipart-params
+		(POST templates/*image-url* {params :params}
+			(let [image (get params "image")]
+				(println "upload image" params)
+				(data/make-image (:filename image) (get params "title")
+						(get params "description") (:content-type image)
+						(:tempfile image))
+				(redirect-after-post (get params "url")))))
+
+
+	; "api urls"
 	(POST "/api/blog/" [title]
 		(let [userid (:id (data/get-current-user))]
 			(json-response (render-blog-json

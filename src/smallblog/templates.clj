@@ -12,15 +12,20 @@
 ; when changing these, also check snippets.html and core/security-config
 (def *login-url* "/login")
 (def *login-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
+
 (def *signup-url* "/signup")
 (def *signup-fqurl* (str "https://" *server* ":" *https-port* *signup-url*))
+
 (def *account-url* "/account")
 (def *account-fqurl* (str "https://" *server* ":" *https-port* *account-url*))
+
 (def *login-redirect-url* "/login-redirect")
 (def *login-redirect-fqurl*
 	(str "https://localhost:" *https-port* *login-redirect-url*))
 (def *logout-url* "/logout")
 (def *permission-denied-uri* "/permission-denied")
+
+(def *image-url* "/images")
 
 
 (def date-output-format (clj-time-format/formatter "dd MMM yyyy HH:mm"))
@@ -106,6 +111,10 @@
 	[ctx]
 	[:#email] (html/set-attr :value (:name (:user ctx)))
 	[:#menu] (html/content (user-menu ctx))
+	[:#imageform] (html/set-attr :action
+		(if (nil? (:url ctx))
+			*image-url*
+			(str *image-url* "?url=" (url-encode (:url ctx)))))
 	[:div.blog] (html/clone-for [item (:blogs ctx)]
 			[:.blogtitle] (html/set-attr :href
 								(str "/blog/" (:id item) "/post/"))

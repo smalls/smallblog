@@ -34,6 +34,27 @@
 			PRIMARY KEY(id)
 		);
 
+CREATE TABLE imageblob (
+id BIGSERIAL,
+image BYTEA,
+contenttype TEXT NOT NULL,
+PRIMARY KEY(id)
+);
+
+CREATE TABLE image (
+id BIGSERIAL,
+owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+filename TEXT NOT NULL,
+title TEXT,
+description TEXT,
+fullimage BIGINT REFERENCES imageblob,
+blogwidthimage BIGINT REFERENCES imageblob,
+thumbnail BIGINT REFERENCES imageblob,
+created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
+PRIMARY KEY(id)
+);
+
+
 	   misc postgres notes
 		   ;to describe a table: psql$ \d+ tablename
 )
@@ -189,3 +210,8 @@
 					{:title title :content content :blogid blogid
 						:converted_content (markdownify content)})]
 			(get-post blogid id))))
+
+(defn make-image [filename, title, description, content-type, path]
+	(println "make-image" filename "," title "," description ","
+		  content-type "," path)
+	)
