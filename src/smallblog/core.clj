@@ -162,8 +162,16 @@
 				(println "upload image" params)
 				(data/make-image (:filename image) (get params "title")
 						(get params "description") (:content-type image)
-						(:tempfile image))
+						(:tempfile image) (:id (data/get-current-user)))
 				(redirect-after-post (get params "url")))))
+	(GET (str templates/*image-url* "/:imgid/:res") [imgid res]
+		(let [image (data/get-image (Integer/parseInt imgid) res)]
+			(if (nil? image)
+				nil
+				{:body (:image image)
+					; XXX need to add cache control to this
+					:headers {"Content-Type" (:content-type image)
+						"filename" (:filename image)}})))
 
 
 	; "api urls"
@@ -195,8 +203,8 @@
 		wrap-stateful-session
 
 		; XXX not for production
-		(wrap-reload '(smallblog.templates)) ;, smallblog.core, smallblog.util,
-									 ;smallblog.data))
+		(wrap-reload '(smallblog.templates smallblog.data)) ;, smallblog.core, smallblog.util,
+									 ;))
 
 		(wrap-stacktrace)
 		(wrap-params)

@@ -1,10 +1,13 @@
 (ns smallblog.data
-	(:use		[smallblog.templates :only (markdownify)]
+	(:use		[smallblog.templates :only (markdownify
+								*image-full* *image-blog* *image-thumb*)]
+				[clojure.contrib.duck-streams :only (to-byte-array)]
 				[sandbar.auth :only (current-user, *sandbar-current-user*,
 								allow-access?)]
 				[sandbar.stateful-session :only (session-put!)])
 	(:require	[clj-sql.core :as sql])
-	(:import	[org.mindrot.jbcrypt BCrypt]))
+	(:import	[org.mindrot.jbcrypt BCrypt]
+				[java.io ByteArrayInputStream]))
 
 #_ (comment
 	postgres
@@ -211,7 +214,45 @@ PRIMARY KEY(id)
 						:converted_content (markdownify content)})]
 			(get-post blogid id))))
 
-(defn make-image [filename, title, description, content-type, path]
-	(println "make-image" filename "," title "," description ","
-		  content-type "," path)
-	)
+(defn make-image
+	"make an image, returns the id"
+	[filename, title, description, content-type, path, userid]
+	(let [imagebytes (to-byte-array path)]
+		(sql/with-connection *db*
+			(let [fullimageid (sql/insert-record :imageblob
+					{:contenttype content-type
+						:image imagebytes})]
+				(sql/insert-record :image
+					{:filename filename :title title :description description
+						:owner userid :fullimage fullimageid})))))
+
+(defn get-image-results
+	"get the image result object, including the imageblob specified by id.
+		Must have an open db connection."
+	[image blobid]
+	(sql/with-query-results rs ["select * from imageblob where id=?" blobid]
+		(let [blob (first rs)]
+			(if (nil? blob)
+				nil
+				{:filename (:filename image)
+					:title (:title image)
+					:description (:description image)
+					:image (ByteArrayInputStream. (:image blob))
+					:content-type (:contenttype blob)}))))
+				
+(defn get-image
+	"returns a map with :filename, :title, :description (from image table)
+		and :image (as a stream), :content-type from imageblob"
+	[imageid res]
+	(sql/with-connection *db*
+		(sql/with-query-results rs ["select * from image where id=?" imageid]
+			(let [image (first rs)]
+				(cond
+					(nil? image) nil
+					(= *image-full* res) (get-image-results image
+												(:fullimage image))
+					(= *image-blog* res) (get-image-results image
+												(:blogwidthimage image))
+					(= *image-thumb* res) (get-image-results image
+												(:thumbnail image))
+					:else nil)))))

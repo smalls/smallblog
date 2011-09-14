@@ -26,6 +26,9 @@
 (def *permission-denied-uri* "/permission-denied")
 
 (def *image-url* "/images")
+(def *image-full* "full")
+(def *image-blog* "blog")
+(def *image-thumb* "thumb")
 
 
 (def date-output-format (clj-time-format/formatter "dd MMM yyyy HH:mm"))
