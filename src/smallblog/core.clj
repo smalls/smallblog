@@ -5,7 +5,6 @@
 				[ring.middleware.json-params]
 				[ring.middleware.params]
 				[ring.middleware.multipart-params]
-				[ring.middleware.reload]
 				[ring.middleware.stacktrace]
 				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
@@ -204,10 +203,6 @@
 	(-> main-routes
 		(with-security security-config authorize)
 		wrap-stateful-session
-
-		; XXX not for production
-		(wrap-reload '(smallblog.templates smallblog.data)) ;, smallblog.core, smallblog.util,
-									 ;))
 
 		(wrap-stacktrace)
 		(wrap-params)
