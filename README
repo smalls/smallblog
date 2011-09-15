@@ -2,9 +2,18 @@
 
 A small basic blog system.
 
+By default it'll store information in PostgreSQL, so you'll need to have a
+server running.  The schema is stored in data.clj, and you may need to modify
+the connection strings (also in data.clj).
+
+
 ## Usage
 
-FIXME: write
+By default, the server starts both Jetty and a NailGun server (for VimClojure).
+It's pretty easy to disable NailGun, look at core.clj.  To start the server,
+run:
+
+	lein run :server
 
 ## License
 

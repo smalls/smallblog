@@ -17,7 +17,10 @@
 				[clj-time.core :as clj-time]
 				[clj-time.format :as clj-time-format]
 				[clj-time.coerce :as clj-time-coerce]
-				[clj-json.core :as json]))
+				[clj-json.core :as json])
+	(:import	[vimclojure.nailgun NGServer] ; XXX nailgun should be
+				[java.net InetAddress]))			; removed for production
+	
 
 (defn index-page []
 	(str "hi hi hi <a href=\"http://localhost:3000/blog/67/post/\">link</a>"))
@@ -211,6 +214,11 @@
 		(wrap-json-params)))
 
 (defn -main []
+	(let [ng-host "127.0.0.1"
+			ng-port 2113
+			ng-server (NGServer. (InetAddress/getByName ng-host) ng-port)]
+		(.start (Thread. ng-server)))
+	
 	(let [port (System/getenv "PORT")
 			port (if (nil? port) "3000" port)
 			port (Integer/parseInt port)
