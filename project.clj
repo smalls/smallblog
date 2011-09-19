@@ -12,5 +12,6 @@
 							[sandbar/sandbar "0.3.0"]
 							[org.mindrot/jbcrypt "0.3m"]
 				 			[postgresql/postgresql "9.0-801.jdbc4"]]
-	:dev-dependencies	[[vimclojure/server "2.2.0"]]
+	:dev-dependencies	[[vimclojure/server "2.2.0"]
+							[org.clojars.autre/lein-vimclojure "1.0.0"]]
 	:run-aliases		{:server smallblog.core})
