@@ -3,7 +3,7 @@
 								*image-full* *image-blog* *image-thumb*)]
 				[clojure.contrib.duck-streams :only (to-byte-array)]
 				[clojure.contrib.string :only (split)]
-				[sandbar.auth :only (current-user, *sandbar-current-user*,
+				[sandbar.auth :only (current-user *sandbar-current-user*
 								allow-access?)]
 				[sandbar.stateful-session :only (session-put!)])
 	(:require	[clj-sql.core :as sql])
@@ -70,8 +70,8 @@
 (let [db-host "localhost"
 		db-port "5432"
 		db-name "smallblog"]
-	(def *db* {:classname		"org.postgresql.Driver",
-				:subprotocol	"postgresql",
+	(def *db* {:classname		"org.postgresql.Driver"
+				:subprotocol	"postgresql"
 				:subname		(str "//" db-host ":" db-port "/" db-name)
 				;:user			"auser"
 				;:password		"apw"
@@ -189,7 +189,7 @@
 		(sql/with-query-results rs ["select * from blog where id=?" id]
 			(first rs))))
 
-(defn make-blog [login_id, title]
+(defn make-blog [login_id title]
 	(sql/with-connection *db*
 		(let [id (sql/insert-record :blog {:title title :owner login_id})]
 			(get-blog id))))
@@ -199,20 +199,20 @@
 		(sql/delete-rows :blog ["id=?" id])))
 
 
-(defn get-post [blogid, id]
+(defn get-post [blogid id]
 	(sql/with-connection *db*
 		(sql/with-query-results rs
 				["select * from post where blogid=? and id=?" (int blogid) id]
 			(first rs))))
 
-(defn get-posts [blogid, number, offset]
+(defn get-posts [blogid number offset]
 	(sql/with-connection *db*
 		(sql/with-query-results rs
 				["select * from post where blogid=? order by created_date desc limit ? offset ?"
 						blogid number offset]
 			(doall rs))))
 
-(defn make-post [blogid, title, content]
+(defn make-post [blogid title content]
 	(sql/with-connection *db*
 		(let [id (sql/insert-record :post
 					{:title title :content content :blogid blogid
@@ -264,7 +264,7 @@
 
 (defn make-image
 	"make an image, returns the id"
-	[filename, title, description, content-type, path, userid]
+	[filename title description content-type path userid]
 	(let [imagebytes (to-byte-array path)]
 		(sql/with-connection *db* (sql/transaction
 			(let [fullimageid (sql/insert-record :imageblob
@@ -312,3 +312,13 @@
 					(= *image-thumb* res) (get-image-results image
 												(:thumbnail image))
 					:else nil)))))
+
+(defn get-images
+	"returns some basic info about images with the specified offset for the
+		current user"
+	[userid number offset]
+	(sql/with-connection *db*
+		(sql/with-query-results rs
+				["select id, filename, title, description from image where owner=? order by created_date desc limit ? offset ?"
+						userid number offset]
+			(doall rs))))

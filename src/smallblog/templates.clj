@@ -123,6 +123,15 @@
 								(str "/blog/" (:id item) "/post/"))
 			[:.blogtitle] (html/content (:title item))))
 
+(html/deftemplate images "smallblog/templates/images.html"
+	[ctx]
+	[:#menu] (html/content (user-menu ctx))
+	[:div.image] (html/clone-for [item (:images ctx)]
+			[:.imglink] (html/set-attr :href
+							(str *image-url* "/" (:id item) "/" *image-full*))
+			[:.imgdisp] (html/set-attr :src
+							(str *image-url* "/" (:id item) "/" *image-blog*))))
+
 (html/deftemplate signup "smallblog/templates/signup.html"
 	[ctx]
 	[:#menu] (html/content (user-menu ctx)))

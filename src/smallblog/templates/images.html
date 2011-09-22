@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>images</title>
+
+	<link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection">
+	<link rel="stylesheet" href="/css/blueprint/print.css" type="text/css" media="print">
+	<!--[if lt IE 8]>
+		<link rel="stylesheet" href="/css/blueprint/ie.css" type="text/css" media="screen, projection">
+	<![endif]-->
+
+	<link href="/css/smallblog.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div class="container">
+	<div id="menu" class="prepend-5 span-14 append-5 last">
+	</div>
+
+	<div class="section prepend-5 span-14 append-5 last">
+		<p class="large" style="text-align: center">new image</p>
+		<form id="imageform" method="POST" class="inline"
+				enctype="multipart/form-data">
+			<div class="span-4">
+				<label for="imagetitle">title</label>
+			</div>
+			<div class="span-10 last">
+				<input type="text" name="title" id="imagetitle"
+						class="textinput-10">
+			</div>
+
+			<div class="span-4">
+				<label for="imagedescription">description</label>
+			</div>
+			<div class="span-10 last">
+				<textarea name="description" id="imagedescription"
+						class="textinput-10" style="height: 60px"></textarea>
+			</div>
+
+			<div class="span-4">
+				<label for="imageimage">image</label>
+			</div>
+			<div class="span-10 last">
+				<input type="file" name="image" id="imageimage">
+			</div>
+
+
+			<input type="submit" value="submit">
+		</form>
+	</div>
+
+	<div class="prepend-5 span-14 append-5 last">
+		<p class="large" style="text-align: center">images</p>
+	</div>
+
+	<div class="image prepend-5 span-14 append-5 last">
+		<a class="imglink" href="/images/id/full">
+			<img class="imgdisp" src="/images/id/blog" title="title">
+		</a>
+	</div>
+</div>
+</body>

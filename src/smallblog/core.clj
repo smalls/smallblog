@@ -56,6 +56,10 @@
 (defn render-html-signup []
 	(templates/signup {}))
 
+(defn render-html-images [images]
+	(templates/images {:images images
+				:user (data/get-current-user)}))
+
 
 
 (defn permission-denied []
@@ -159,10 +163,12 @@
 
 
 	; "image urls"
+	(GET templates/*image-url* []
+		(render-html-images (data/get-images
+						(:id (data/get-current-user)) 10 0)))
 	(wrap-multipart-params
 		(POST templates/*image-url* {params :params}
 			(let [image (get params "image")]
-				(println "upload image" params)
 				(data/make-image (:filename image) (get params "title")
 						(get params "description") (:content-type image)
 						(:tempfile image) (:id (data/get-current-user)))
