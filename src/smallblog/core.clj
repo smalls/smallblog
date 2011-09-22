@@ -172,7 +172,7 @@
 				(data/make-image (:filename image) (get params "title")
 						(get params "description") (:content-type image)
 						(:tempfile image) (:id (data/get-current-user)))
-				(redirect-after-post (get params "url")))))
+				(redirect-after-post templates/*image-url*))))
 	(GET (str templates/*image-url* "/:imgid/:res") [imgid res]
 		(let [image (data/get-image (Integer/parseInt imgid) res)]
 			(if (nil? image)
