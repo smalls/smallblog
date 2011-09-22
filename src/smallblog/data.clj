@@ -41,26 +41,26 @@
 			PRIMARY KEY(id)
 		);
 
-CREATE TABLE imageblob (
-id BIGSERIAL,
-image BYTEA,
-contenttype TEXT NOT NULL,
-owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-PRIMARY KEY(id)
-);
+		CREATE TABLE imageblob (
+			id BIGSERIAL,
+			image BYTEA,
+			contenttype TEXT NOT NULL,
+			owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+			PRIMARY KEY(id)
+		);
 
-CREATE TABLE image (
-id BIGSERIAL,
-owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-filename TEXT NOT NULL,
-title TEXT,
-description TEXT,
-fullimage BIGINT REFERENCES imageblob,
-blogwidthimage BIGINT REFERENCES imageblob,
-thumbnail BIGINT REFERENCES imageblob,
-created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-PRIMARY KEY(id)
-);
+		CREATE TABLE image (
+			id BIGSERIAL,
+			owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+			filename TEXT NOT NULL,
+			title TEXT,
+			description TEXT,
+			fullimage BIGINT REFERENCES imageblob,
+			blogwidthimage BIGINT REFERENCES imageblob,
+			thumbnail BIGINT REFERENCES imageblob,
+			created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
+			PRIMARY KEY(id)
+		);
 
 
 	   misc postgres notes
@@ -266,7 +266,7 @@ PRIMARY KEY(id)
 	"make an image, returns the id"
 	[filename, title, description, content-type, path, userid]
 	(let [imagebytes (to-byte-array path)]
-		(sql/with-connection *db*
+		(sql/with-connection *db* (sql/transaction
 			(let [fullimageid (sql/insert-record :imageblob
 						{:contenttype content-type
 							:image imagebytes :owner userid})
@@ -280,7 +280,7 @@ PRIMARY KEY(id)
 					{:filename filename :title title :description description
 						:owner userid :fullimage fullimageid
 						:blogwidthimage blogimageid
-						:thumbnail thumbimageid})))))
+						:thumbnail thumbimageid}))))))
 
 (defn get-image-results
 	"get the image result object, including the imageblob specified by id.
