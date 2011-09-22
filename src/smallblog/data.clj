@@ -2,12 +2,16 @@
 	(:use		[smallblog.templates :only (markdownify
 								*image-full* *image-blog* *image-thumb*)]
 				[clojure.contrib.duck-streams :only (to-byte-array)]
+				[clojure.contrib.string :only (split)]
 				[sandbar.auth :only (current-user, *sandbar-current-user*,
 								allow-access?)]
 				[sandbar.stateful-session :only (session-put!)])
 	(:require	[clj-sql.core :as sql])
 	(:import	[org.mindrot.jbcrypt BCrypt]
-				[java.io ByteArrayInputStream]))
+				[java.io ByteArrayInputStream ByteArrayOutputStream]
+				[javax.imageio ImageIO]
+				[java.awt.image BufferedImageOp]
+				[com.thebuzzmedia.imgscalr Scalr ]))
 
 #_ (comment
 	postgres
@@ -41,6 +45,7 @@ CREATE TABLE imageblob (
 id BIGSERIAL,
 image BYTEA,
 contenttype TEXT NOT NULL,
+owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
 PRIMARY KEY(id)
 );
 
@@ -214,17 +219,68 @@ PRIMARY KEY(id)
 						:converted_content (markdownify content)})]
 			(get-post blogid id))))
 
+(defn get-content-type
+	"get the image content type and format; map gif to png, otherwise make a
+		best effort to match the type"
+	[full-image-content-type]
+	(let [mime-types (ImageIO/getWriterMIMETypes)
+			formats (ImageIO/getWriterFormatNames)
+			desired-content-type (if (= "image/gif" full-image-content-type)
+							"image/png"
+							full-image-content-type)
+			desired-format (last (split #"\/" desired-content-type))]
+		(cond
+			(and
+				(some #(= desired-content-type %) mime-types)
+				(some #(= desired-format %) formats))
+				[desired-content-type desired-format]
+			(and
+				(some #(= "image/png" %) mime-types)
+				(some #(= "png" %) formats))
+				["image/png" "png"]
+			:else (throw (Exception.
+					(str "unknown mime type: " desired-content-type))))))
+
+(defn do-scale
+	"scales the image, returns the bytes of the image"
+	[imagestream full-img-content-type width userid]
+		(let [fullimg (ImageIO/read imagestream)
+				scaledimg (Scalr/resize fullimg width
+							(make-array BufferedImageOp 0))
+				mimetype (get-content-type full-img-content-type)
+				baos (ByteArrayOutputStream.)]
+			(try
+				(ImageIO/write scaledimg (last mimetype) baos)
+				{:image (.toByteArray baos) :contenttype (first mimetype)
+					:owner userid}
+				(finally (.close baos)))))
+
+(defn scale-image-to-bytes
+	[imagebytes full-img-content-type width userid]
+	(let [bais (ByteArrayInputStream. imagebytes)]
+		(try
+			(do-scale bais full-img-content-type width userid)
+			(finally (.close bais)))))
+
 (defn make-image
 	"make an image, returns the id"
 	[filename, title, description, content-type, path, userid]
 	(let [imagebytes (to-byte-array path)]
 		(sql/with-connection *db*
 			(let [fullimageid (sql/insert-record :imageblob
-					{:contenttype content-type
-						:image imagebytes})]
+						{:contenttype content-type
+							:image imagebytes :owner userid})
+					thumbimageid (sql/insert-record :imageblob
+							(scale-image-to-bytes imagebytes content-type 150
+								userid))
+					blogimageid (sql/insert-record :imageblob
+							(scale-image-to-bytes imagebytes content-type 538
+								userid))]
 				(sql/insert-record :image
 					{:filename filename :title title :description description
-						:owner userid :fullimage fullimageid})))))
+						:owner userid :fullimage fullimageid
+						:blogwidthimage blogimageid
+						:thumbnail thumbimageid})))))
 
 (defn get-image-results
 	"get the image result object, including the imageblob specified by id.

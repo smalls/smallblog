@@ -1,11 +1,13 @@
 (ns smallblog.test.data
 	(:use		[smallblog.core]
+				[smallblog.templates :only (*image-blog*)]
 				[clojure.test]
 				[sandbar.auth :only (*sandbar-current-user*)]
 				[sandbar.stateful-session :only (sandbar-session)]
 				[clj-time.core :only (now)])
 	(:require	[smallblog.data :as data]
-				[clj-sql.core :as sql]))
+				[clj-sql.core :as sql])
+	(:import	[java.io File FileNotFoundException]))
 
 (deftest test-login
 	"test basic creation and retrival of login rows, test-login-for-session,
@@ -165,3 +167,22 @@
 		(is (not (= hashed "foo")))
 		(is (data/-check-hashed "foo" hashed))
 		(is (not (data/-check-hashed "fooo" hashed)))))
+
+(deftest test-get-content-type []
+	(is (= ["image/jpeg" "jpeg"] (data/get-content-type "image/jpeg")))
+	(is (= ["image/png" "png"] (data/get-content-type "image/png")))
+	(is (= ["image/png" "png"] (data/get-content-type "image/gif")))
+	(is (= ["image/png" "png"] (data/get-content-type "image/nonesuch"))))
+
+(deftest test-make-image []
+	(let [loginid (data/make-login (str (now) "@test.com") "password")]
+		(try
+			(let [path (File. "test/smallblog/test/data/IMG_0568.jpg")
+					imageid (data/make-image "IMG_0568.jpg" "title" "description"
+								"image/tiff" path loginid)]
+				(is (.exists path))
+				(is (thrown? FileNotFoundException 
+					(data/make-image "foo.tiff" "title" "description"
+								"image/tiff" (File. "nonesuch.tiff") loginid)))
+				(is (not (nil? (data/get-image imageid *image-blog*)))))
+			(finally (data/delete-login loginid)))))
