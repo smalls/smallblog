@@ -15,6 +15,11 @@ run:
 
 	lein run :server
 
+Or, from a REPL:
+
+	(smallblog.core/-main)
+
+
 ## License
 
 Copyright (C) 2011 Matt Small
