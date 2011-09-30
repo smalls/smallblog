@@ -12,6 +12,10 @@
 
 	<link href="/css/smallblog.css" rel="stylesheet" type="text/css">
 
+	<link type="text/css" href="/css/jquery-ui/jquery-ui.css" rel="Stylesheet"/>
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui.min.js"></script>
+
 	<script type="text/javascript" src="/js/pagedown/Markdown.Converter.js"></script> 
 	<script type="text/javascript" src="/js/pagedown/Markdown.Sanitizer.js"></script> 
 	<script type="text/javascript" src="/js/pagedown/Markdown.Editor.js"></script>
@@ -30,7 +34,13 @@
 			<input type="text" name="title" class="textinput-14">
 			<textarea class="wmd-input" name="content" id="wmd-input"
 					class="textinput-14"></textarea>
-			<input type="submit" value="submit" style="float: right">
+
+			<div class="span-14 last">
+				<button id="imagebtn" type="button">image</button>
+			</div>
+			<div class="span-14 last">
+				<input type="submit" value="submit" style="float: right">
+			</div>
 		</form>
 	</div>
 	<div class="prepend-1 span-4 last">
@@ -45,13 +55,54 @@
 	</div>
 </div>
 
-<script type="text/javascript"> 
+<script type="text/javascript">
+	var editor;
+
 	/* see http://pagedown.googlecode.com/hg/demo/browser/demo.html */
-	(function () {
+	$(document).ready(function(){
 		var converter = Markdown.getSanitizingConverter();
-		var editor = new Markdown.Editor(converter);
+		editor = new Markdown.Editor(converter);
 		editor.run();
-	})();
+
+		$('#image-dialog').dialog({
+			autoOpen: false,
+			modal: true,
+			open: function(event, ui) {
+				$('#image-dialog').empty();
+				$('#image-dialog').append('<p>hi</p>');
+				$('#image-dialog').append(
+					'<button class="add-img-btn" id="foo-12">hi</button>');
+				$('.add-img-btn').button();
+				$('.add-img-btn').click(function(evt){
+					var imagetext = "hihi";
+					var textarea = $('#wmd-input').val();
+					if ("" != textarea) {
+						imagetext = '\n\n' + imagetext;
+					}
+
+					$('#image-dialog').dialog('close');
+
+					$('#wmd-input').focus();
+
+					$('#wmd-input').val('');
+					$('#wmd-input').val(textarea + imagetext);
+
+					editor.refreshPreview();
+
+					return true;
+				});
+			}
+		});
+
+		$("input:submit, button").button();
+		$('#imagebtn').click(function(evt){
+			$('#image-dialog').dialog('open');
+		});
+
+	});
 </script> 
+
+<div id="image-dialog" title="select an image">
+</div>
 
 </body>
