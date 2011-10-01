@@ -5,3 +5,7 @@
 .textinput-10 {width: 378px; padding: 5px; border: 1px solid #BBB;}
 
 div.section {margin-top: 60px;}
+
+td.img-select-title-td {}
+td.img-select-thumb-td {width: 175px;}
+td.img-select-button-td {width: 125px;}

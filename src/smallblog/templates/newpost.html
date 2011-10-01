@@ -58,8 +58,53 @@
 <script type="text/javascript">
 	var editor;
 
-	/* see http://pagedown.googlecode.com/hg/demo/browser/demo.html */
+	function imageSelectorButtonClick(evt) {
+		var idsplit = this.id.split('-');
+		var imgtitle = this.title.substring(this.title.indexOf(':')+1);
+
+		// [![alt text](/images/11/thumb "title")](/images/11/full)
+		var imagetext = '[!['+imgtitle+'](/images/'+idsplit[2]+'/'+idsplit[1]+
+				' "'+imgtitle+'")](/images/'+idsplit[2]+'/full)';
+
+		var textarea = $('#wmd-input').val();
+		if ("" != textarea) {
+			imagetext = '\n\n' + imagetext;
+		}
+
+		$('#image-dialog').dialog('close');
+
+		$('#wmd-input').focus();
+
+		$('#wmd-input').val('');
+		$('#wmd-input').val(textarea + imagetext);
+
+		editor.refreshPreview();
+
+		return true;
+	}
+
+	function populateImageSelector(data) {
+
+		var tbody = $('#image-selector-tbody');
+		for (var i=0; i<data.length; i++) {
+			var img = data[i];
+
+			tbody.append('<tr>'+
+				'<td class="img-select-title-td">'+img['title']+'</td>'+
+				'<td class="img-select-thumb-td"><img src="/images/'+img['id']+'/thumb"></img></td>'+
+				'<td class="img-select-button-td"><button class="add-img-btn" id="add-thumb-'+img['id']+
+					'" title="add image: '+img['title']+'">thumbnail</button></td>'+
+				'<td class="img-select-button-td"><button class="add-img-btn" id="add-blog-'+img['id']+
+					'" title="add image: '+img['title']+'">blog width</button></td>'+
+				'</tr>');
+		}
+
+		$('.add-img-btn').button();
+		$('.add-img-btn').click(imageSelectorButtonClick);
+	}
+
 	$(document).ready(function(){
+		/* see http://pagedown.googlecode.com/hg/demo/browser/demo.html */
 		var converter = Markdown.getSanitizingConverter();
 		editor = new Markdown.Editor(converter);
 		editor.run();
@@ -67,30 +112,16 @@
 		$('#image-dialog').dialog({
 			autoOpen: false,
 			modal: true,
+			width: 650,
+			height: 'auto',
 			open: function(event, ui) {
-				$('#image-dialog').empty();
-				$('#image-dialog').append('<p>hi</p>');
-				$('#image-dialog').append(
-					'<button class="add-img-btn" id="foo-12">hi</button>');
-				$('.add-img-btn').button();
-				$('.add-img-btn').click(function(evt){
-					var imagetext = "hihi";
-					var textarea = $('#wmd-input').val();
-					if ("" != textarea) {
-						imagetext = '\n\n' + imagetext;
-					}
-
-					$('#image-dialog').dialog('close');
-
-					$('#wmd-input').focus();
-
-					$('#wmd-input').val('');
-					$('#wmd-input').val(textarea + imagetext);
-
-					editor.refreshPreview();
-
-					return true;
+				$.ajax({url: '/api/images/',
+					success: populateImageSelector
 				});
+				$('#image-dialog').empty();
+				$('#image-dialog').append('<table><tbody id="image-selector-tbody"></tbody></table>');
+				// $('#image-dialog').append(
+				// 	'<button class="add-img-btn" id="foo-12">hi</button>');
 			}
 		});
 
