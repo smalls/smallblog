@@ -186,3 +186,10 @@
 				(is (substring? "/account" (join (:headers response-post))))
 				(is (not (nil? newloginid)))
 				(finally (data/delete-login newloginid)))))))
+
+(deftest test-render-json-images []
+	(let [images '({:id 1 :title "foo" :description "desc" :filename "f"}
+				{:id 2 :title "bar" :description "desc" :filename "f"})
+			json-images (render-json-images images)]
+		(is (= 1 (:id (first json-images))))
+		(is (= 2 (:id (last json-images))))))

@@ -17,7 +17,7 @@
 				[clj-time.format :as clj-time-format]
 				[clj-time.coerce :as clj-time-coerce]
 				[clj-json.core :as json]))
-	
+
 
 (defn index-page []
 	(str "hi hi hi <a href=\"http://localhost:3000/blog/67/post/\">link</a>"))
@@ -60,6 +60,10 @@
 	(templates/images {:images images
 				:user (data/get-current-user)}))
 
+(defn render-json-images [images]
+	(map #(identity {:id (:id %), :title (:title %), :description (:description %),
+			:filename (:filename %)}) images))
+
 
 
 (defn permission-denied []
@@ -70,6 +74,7 @@
 	 #"/blog/.*/post/new" #{:admin :user}
 	 #"/account" #{:admin :user}
 	 #"/api/blog/.*/post/" #{:admin :user}
+	 #"/api/images/" #{:admin :user}
 	 #"/login-redirect.*" #{:admin :user}
 	 #"/images" #{:admin :user}
 	 #".*" :any])
@@ -198,6 +203,10 @@
 			(redirect templates/*permission-denied-uri*)
 			(json-response (render-post-json
 				(data/make-post (Integer/parseInt bid) title content)))))
+	(GET "/api/images/" []
+		(let [userid (:id (data/get-current-user))]
+			(json-response (render-json-images
+				(data/get-images userid 10 0)))))
 	; (GET "/api/post/:id" [id]
 	; 	(json-response (data/get-post id)))
 	; (PUT "/api/post/:id" [id]
