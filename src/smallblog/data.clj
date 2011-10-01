@@ -274,7 +274,7 @@
 							(scale-image-to-bytes imagebytes content-type 150
 								userid))
 					blogimageid (sql/insert-record :imageblob
-							(scale-image-to-bytes imagebytes content-type 538
+							(scale-image-to-bytes imagebytes content-type 550
 								userid))]
 				(sql/insert-record :image
 					{:filename filename :title title :description description
@@ -295,7 +295,7 @@
 					:description (:description image)
 					:image (ByteArrayInputStream. (:image blob))
 					:content-type (:contenttype blob)}))))
-				
+
 (defn get-image
 	"returns a map with :filename, :title, :description (from image table)
 		and :image (as a stream), :content-type from imageblob"
