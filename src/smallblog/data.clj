@@ -62,6 +62,14 @@
 			PRIMARY KEY(id)
 		);
 
+		CREATE TABLE domain (
+			id BIGSERIAL,
+			domain TEXT NOT NULL UNIQUE,
+			owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+			blogid int REFERENCES blog(id) ON DELETE SET NULL,
+			PRIMARY KEY(id)
+		);
+
 
 	   misc postgres notes
 		   ;to describe a table: psql$ \d+ tablename
@@ -212,7 +220,9 @@
 						blogid number offset]
 			(doall rs))))
 
-(defn make-post [blogid title content]
+(defn make-post
+	"create a post, retrieve the newly inserted post"
+	[blogid title content]
 	(sql/with-connection *db*
 		(let [id (sql/insert-record :post
 					{:title title :content content :blogid blogid
@@ -321,4 +331,24 @@
 		(sql/with-query-results rs
 				["select id, filename, title, description from image where owner=? order by created_date desc limit ? offset ?"
 						userid number offset]
+			(doall rs))))
+
+(defn make-domain
+	"create a domain, return the id"
+	([domainname userid]
+		(make-domain domainname userid nil))
+	([domainname userid blogid]
+		(sql/with-connection *db*
+			(let [id (sql/insert-record :domain
+						{:domain domainname :owner userid :blogid blogid})]
+				id))))
+
+(defn get-domain [domainname]
+	(sql/with-connection *db*
+		(sql/with-query-results rs ["select * from domain where domain=?" domainname]
+			(first rs))))
+
+(defn get-user-domains [loginid]
+	(sql/with-connection *db*
+		(sql/with-query-results rs ["select * from domain where owner=?" loginid]
 			(doall rs))))

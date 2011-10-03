@@ -199,3 +199,19 @@
 					(is (= 1 (count images)))
 					(is (= "title" (:title (first images))))))
 			(finally (data/delete-login loginid)))))
+
+(deftest test-domains
+	"test make-domain, get-domain, and get-user-domains"
+	[]
+	(let [loginid (data/make-login (str (now) "@test.com") "password")]
+		(try
+			(let [domainname "ablahblah"
+					id (data/make-domain domainname loginid)
+					loaded-domain (data/get-domain domainname)
+					user-domains (data/get-user-domains loginid)]
+				(is (not (nil? loaded-domain)))
+				(is (= domainname (:domain loaded-domain)))
+				(is (not (nil? user-domains)))
+				(is (= 1 (count user-domains)))
+				(is (= domainname (:domain (first user-domains)))))
+			(finally (data/delete-login loginid)))))
