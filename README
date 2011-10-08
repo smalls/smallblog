@@ -15,9 +15,9 @@ run:
 
 	lein run :server
 
-Or, from a REPL:
+Or, from a REPL (this won't block):
 
-	(smallblog.core/-main)
+	(smallblog.core/start-server false)
 
 
 ## License
