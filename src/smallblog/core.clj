@@ -6,6 +6,7 @@
 				[ring.middleware.params]
 				[ring.middleware.multipart-params]
 				[ring.middleware.stacktrace]
+				[clojure.stacktrace] ; XXX
 				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
@@ -92,10 +93,25 @@
 (defn ensure-secure [request]
 	(= :https (:scheme request)))
 
+(defn render-html-posts-helper [blogid request]
+	(render-html-posts
+		(data/get-posts blogid 10 0)
+		(util/uri-from-request request)
+		(:title (data/get-blog blogid))
+		blogid))
 
 
 (defroutes main-routes
-	(GET "/" [] (index-page))
+	(GET "/" [:as request]
+		(let [server-name (str
+						(:server-name request)
+						(if (not (nil? (:server-port request)))
+							(str ":" (:server-port request))))
+				uri (:uri request)]
+			(let [domain (data/get-domain server-name)]
+				(if (not (nil? domain))
+					(render-html-posts-helper (:blogid domain) request)
+					(index-page)))))
 
 	; "account urls"
 	(GET templates/*permission-denied-uri* [] (permission-denied))
@@ -148,12 +164,8 @@
 	
 
 	; "post urls"
-	(GET "/blog/:bid/post/" [bid :as request]
-		(render-html-posts
-				(data/get-posts (Integer/parseInt bid) 10 0)
-				(util/uri-from-request request)
-				(:title (data/get-blog (Integer/parseInt bid)))
-				bid))
+	(GET "/blog/:blogid/post/" [blogid :as request]
+		(render-html-posts-helper (Integer/parseInt blogid) request))
 	(GET "/blog/:bid/post/new" [bid]
 		(if (not (data/blog-owner? bid))
 			(redirect templates/*permission-denied-uri*)
@@ -224,11 +236,14 @@
 		(wrap-params)
 		(wrap-json-params)))
 
-(defn -main []
+(defn start-server [join]
 	(let [port (System/getenv "PORT")
 			port (if (nil? port) "3000" port)
 			port (Integer/parseInt port)
 			ssl-port templates/*https-port*]
 		(jetty/run-jetty (app port ssl-port)
-				{:port port :ssl-port ssl-port
+				{:join? join :port port :ssl-port ssl-port
 						:keystore "devonly.keystore" :key-password "foobar"})))
+
+(defn -main []
+	(start-server true))
