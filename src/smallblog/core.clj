@@ -6,7 +6,6 @@
 				[ring.middleware.params]
 				[ring.middleware.multipart-params]
 				[ring.middleware.stacktrace]
-				[clojure.stacktrace] ; XXX
 				[sandbar stateful-session auth validation])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
@@ -52,7 +51,8 @@
 (defn render-html-account [url]
 	(let [userid (:id (data/get-current-user))]
 		(templates/account {:blogs (data/get-blogs userid) :url url
-					:user (data/get-current-user)})))
+					:user (data/get-current-user)
+					:domains (data/get-user-domains userid)})))
 
 (defn render-html-signup []
 	(templates/signup {}))
@@ -137,17 +137,25 @@
 				(cond
 					(and (contains? params "oldpw") (contains? params "newpw")
 							(contains? params "confirmpw"))
-						(let [oldpw (get params "oldpw")
-								newpw (get params "newpw")
-								confirmpw (get params "confirmpw")
-								email (:name (data/get-current-user))]
-							(data/change-password email oldpw newpw confirmpw)
-							(redirect-after-post templates/*account-fqurl*))
+					(let [oldpw (get params "oldpw")
+							newpw (get params "newpw")
+							confirmpw (get params "confirmpw")
+							email (:name (data/get-current-user))]
+						(data/change-password email oldpw newpw confirmpw)
+						(redirect-after-post templates/*account-fqurl*))
+
 					(contains? params "blogtitle")
-						(let [blogtitle (get params "blogtitle")
-								userid (:id (data/get-current-user))]
-							(data/make-blog userid blogtitle)
-							(redirect-after-post templates/*account-fqurl*))
+					(let [blogtitle (get params "blogtitle")
+							userid (:id (data/get-current-user))]
+						(data/make-blog userid blogtitle)
+						(redirect-after-post templates/*account-fqurl*))
+
+					(contains? params "domainname")
+					(let [domainname (get params "domainname")
+							userid (:id (data/get-current-user))]
+						(data/make-domain domainname userid)
+						(redirect-after-post templates/*account-fqurl*))
+
 					:else (do
 	  					(println "XXX should be a log not a print" request)
 						{:status 401 :body "bad form parameters"})))))

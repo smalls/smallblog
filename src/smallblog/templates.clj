@@ -121,7 +121,9 @@
 	[:div.blog] (html/clone-for [item (:blogs ctx)]
 			[:.blogtitle] (html/set-attr :href
 								(str "/blog/" (:id item) "/post/"))
-			[:.blogtitle] (html/content (:title item))))
+			[:.blogtitle] (html/content (:title item)))
+	[:tr.domain-entry] (html/clone-for [item (:domains ctx)]
+			[:.domain-name] (html/content (:domain item))))
 
 (html/deftemplate images "smallblog/templates/images.html"
 	[ctx]

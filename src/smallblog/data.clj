@@ -189,7 +189,7 @@
 	"get the blogs owned by the given user"
 	[userid]
 	(sql/with-connection *db*
-		(sql/with-query-results rs ["select * from blog where owner=?" userid]
+		(sql/with-query-results rs ["select * from blog where owner=? order by created_date asc" userid]
 			(doall rs))))
 
 (defn get-blog [id]
