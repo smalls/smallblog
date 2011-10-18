@@ -112,7 +112,15 @@
 			(str *login-redirect-fqurl* "?url=" (url-encode(:url ctx))))))
 
 (defn -domains-for-blog [blogid domains]
-	(filter #(do (= blogid (:blogid %))) domains))
+	(filter #(= blogid (:blogid %)) domains))
+
+(defn -domains-with-blognames [blogs domains]
+	"return a map of domainid -> blogtitle"
+	(let [blogbyid (reduce (fn [m blog] (assoc m (:id blog) (:title blog)))
+						{} blogs)]
+		(reduce (fn [m domain]
+				(assoc m (:id domain) (get blogbyid (:blogid domain))))
+			{} domains)))
 
 (html/deftemplate account "smallblog/templates/account.html"
 	[ctx]
@@ -130,8 +138,12 @@
 								(map #(:domain %)
 									(-domains-for-blog (:id item)
 										(:domains ctx))))))
-	[:tr.domain-entry] (html/clone-for [item (:domains ctx)]
-			[:.domain-name] (html/content (:domain item))))
+	[:tr.domain-entry] (let [domain-to-blog
+						  (-domains-with-blognames (:blogs ctx) (:domains ctx))]
+			(html/clone-for [item (:domains ctx)]
+				[:.domain-name] (html/content (:domain item))
+				[:.domain-blog-title] (html/content
+								(get domain-to-blog (:id item))))))
 
 (html/deftemplate images "smallblog/templates/images.html"
 	[ctx]

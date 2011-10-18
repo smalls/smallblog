@@ -23,3 +23,18 @@
 		(is (= 2 (count filtered-1)))
 		(is (= 0 (count filtered-2)))
 		(is (= 1 (count filtered-3)))))
+
+(deftest test-domains-with-blognames
+	(let [domains [{:id 1 :blogid 1 :domain "foo.com"}
+					{:id 2 :blogid 1 :domain "bar.com"}
+					{:id 3 :blogid 2 :domain "baz.com"}
+					{:id 4 :blogid nil :domain "baz.com"}]
+			blogs [{:id 1 :title "first"} {:id 2 :title "second"}]
+			result (-domains-with-blognames blogs domains)]
+		(is (= 4 (count result)))
+		(is (= "first" (get result 1)))
+		(is (= "first" (get result 2)))
+		(is (= "second" (get result 3)))
+		(is (nil? (get result 4)))))
+		
+
