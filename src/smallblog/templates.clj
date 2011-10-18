@@ -1,5 +1,6 @@
 (ns smallblog.templates
-	(:use			[ring.util.codec :only (url-encode)])
+	(:use			[ring.util.codec :only (url-encode)]
+					[clojure.string :only (join)])
 	(:require		[net.cgrand.enlive-html :as html]
 					[clj-time.core :as clj-time]
 					[clj-time.format :as clj-time-format]
@@ -110,6 +111,9 @@
 			*login-redirect-fqurl*
 			(str *login-redirect-fqurl* "?url=" (url-encode(:url ctx))))))
 
+(defn -domains-for-blog [blogid domains]
+	(filter #(do (= blogid (:blogid %))) domains))
+
 (html/deftemplate account "smallblog/templates/account.html"
 	[ctx]
 	[:#email] (html/set-attr :value (:name (:user ctx)))
@@ -118,10 +122,14 @@
 		(if (nil? (:url ctx))
 			*image-url*
 			(str *image-url* "?url=" (url-encode (:url ctx)))))
-	[:div.blog] (html/clone-for [item (:blogs ctx)]
+	[:tr.blog] (html/clone-for [item (:blogs ctx)]
 			[:.blogtitle] (html/set-attr :href
 								(str "/blog/" (:id item) "/post/"))
-			[:.blogtitle] (html/content (:title item)))
+			[:.blogtitle] (html/content (:title item))
+			[:.blogdomains] (html/content (join "\n"
+								(map #(:domain %)
+									(-domains-for-blog (:id item)
+										(:domains ctx))))))
 	[:tr.domain-entry] (html/clone-for [item (:domains ctx)]
 			[:.domain-name] (html/content (:domain item))))
 
