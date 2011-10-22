@@ -352,3 +352,10 @@
 	(sql/with-connection *db*
 		(sql/with-query-results rs ["select * from domain where owner=?" loginid]
 			(doall rs))))
+
+(defn change-domain
+	"change the specified domain to point at the new blog"
+	[userid domainid blogid]
+	(sql/with-connection *db*
+		(sql/update-values :domain ["id=? and owner=?" domainid userid]
+				{:blogid blogid})))

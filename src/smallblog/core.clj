@@ -6,7 +6,8 @@
 				[ring.middleware.params]
 				[ring.middleware.multipart-params]
 				[ring.middleware.stacktrace]
-				[sandbar stateful-session auth validation])
+				[sandbar stateful-session auth validation]
+				[clojure.contrib.string :only (split)])
 	(:require	[compojure.route :as route]
 				[compojure.handler :as handler]
 				[ring.adapter.jetty :as jetty]
@@ -156,9 +157,23 @@
 						(data/make-domain domainname userid)
 						(redirect-after-post templates/*account-fqurl*))
 
+					(contains? params "change-domains")
+					(let [p-keys (keys params)]
+						(doseq [p p-keys]
+							(if (.startsWith p "change-domain-")
+								(let [domainid (Integer/parseInt
+											(nth (split #"-" p) 2))
+										userid (:id (data/get-current-user))
+										bp (get params p)
+										blogid (if (= 0 (count bp)) nil
+												(Integer/parseInt bp))]
+									(data/change-domain userid
+										domainid blogid))))
+						(redirect-after-post templates/*account-fqurl*))
+
 					:else (do
 	  					(println "XXX should be a log not a print" request)
-						{:status 401 :body "bad form parameters"})))))
+						{:status 400 :body "bad form parameters"})))))
 	(GET templates/*signup-url* [:as request]
 		(if (not (ensure-secure request))
 			{:status 403}

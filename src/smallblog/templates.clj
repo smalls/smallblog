@@ -141,9 +141,17 @@
 	[:tr.domain-entry] (let [domain-to-blog
 						  (-domains-with-blognames (:blogs ctx) (:domains ctx))]
 			(html/clone-for [item (:domains ctx)]
-				[:.domain-name] (html/content (:domain item))
-				[:.domain-blog-title] (html/content
-								(get domain-to-blog (:id item))))))
+					[:.domain-name] (html/content (:domain item))
+					[:.domain-blog-title] (html/content
+									(get domain-to-blog (:id item)))
+					[:select.domain-change] (html/set-attr :name
+									(str "change-domain-" (:id item)))
+					[:option.domain-change] (html/clone-for [bitem (:blogs ctx)]
+							[:*] (html/content (:title bitem))
+							[:*] (html/set-attr :value (:id bitem))
+							[(html/attr= :value (:blogid item))]
+											(html/set-attr :selected
+												"selected")))))
 
 (html/deftemplate images "smallblog/templates/images.html"
 	[ctx]

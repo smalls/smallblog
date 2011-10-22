@@ -132,25 +132,36 @@
 			</tbody>
 		</table>
 
-		<input type="submit" value="submit" style="float: right">
+		<input type="submit" value="add domain" style="float: right">
 	</form>
 
 	<br><br>
 
-	<table class="smalltable">
-		<thead class="ui-widget-header">
-			<tr>
-				<td>Domain Name</td>
-				<td>Blog</td>
-			</tr>
-		</thead>
-		<tbody class="ui-widget-content">
-			<tr class="domain-entry">
-				<td class="domain-name"></td>
-				<td class="domain-blog-title"></td>
-			</tr>
-		</tbody>
-	</table>
+	<form method="POST" class="inline">
+		<input type="hidden" name="change-domains"></input>
+		<table class="smalltable">
+			<thead class="ui-widget-header">
+				<tr>
+					<td>Domain Name</td>
+					<td>Blog</td>
+					<td>Change</td>
+				</tr>
+			</thead>
+			<tbody class="ui-widget-content">
+				<tr class="domain-entry">
+					<td class="domain-name"></td>
+					<td class="domain-blog-title"></td>
+					<td>
+						<select class="domain-change">
+							<option value=""></option>
+							<option class="domain-change"></option>
+						</select>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<input type="submit" value="change domains" style="float: right">
+	</form>
 </div>
 
 <div id="new-blog">
