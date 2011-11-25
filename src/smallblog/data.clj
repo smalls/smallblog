@@ -55,8 +55,6 @@
             owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
             PRIMARY KEY(id)
         );
-
-
         CREATE TABLE image (
             id BIGSERIAL,
             owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
@@ -302,7 +300,7 @@
           s3Object (S3Object. remote-filename (:image-bytes imgmap))]
         (.setContentType s3Object (:content-type imgmap))
         (.setMd5Hash s3Object image-md5)
-        (.addMetadata s3Object "owner" (:owner imgmap))
+        (.addMetadata s3Object "owner" (str (:owner imgmap)))
         (.putObject s3Service bucket s3Object)
         (sql/insert-record :s3reference {:bucket *image-bucket* :filename remote-filename
                                          :owner (:owner imgmap) :md5hash image-md5})))
@@ -342,7 +340,7 @@
                 (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
                       s3Service (RestS3Service. credentials)
                       s3Bucket (.getBucket s3Service *image-bucket*)
-                      s3Object (.getObject s3Bucket (:filename image))]
+                      s3Object (.getObject s3Service s3Bucket (:filename s3ref))]
                     {:filename (:filename image)
                      :title (:title image)
                      :description (:description image)

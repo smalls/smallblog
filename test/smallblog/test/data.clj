@@ -191,7 +191,7 @@
 (deftest test-make-image
          "test make-image, get-image, and get-images"
          []
-         (if false
+         (if true
              (println "this test contacts s3 and costs money; disabled")
              (let [loginid (data/make-login (str (now) "@test.com") "password")]
                  (println "warning: this contacts s3 and is costing money")
