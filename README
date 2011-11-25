@@ -6,11 +6,16 @@ By default it'll store information in PostgreSQL, so you'll need to have a
 server running.  The schema is stored in data.clj, and you may need to modify
 the connection strings (also in data.clj).
 
+Copy src/smallblog/config.clj.template to src/smallblog/config.clj and change
+the parameters to match your system.
+
+If you want to use S3 to store images, you'll need to set your bucket
+permissions.  See src/smallblog/data.clj, post-bucket-policy.  You can run it
+from a REPL, and it'll upload the policy to the bucket stored in *image-bucket*
+specified in config.cfl.
+
 
 ## Usage
-
-To start, copy src/smallblog/config.clj.template to src/smallblog/config.clj
-and change the parameters to match your system.
 
 By default, the server starts both Jetty and a NailGun server (for VimClojure).
 It's pretty easy to disable NailGun, look at core.clj.  To start the server,

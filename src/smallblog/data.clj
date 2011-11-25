@@ -91,6 +91,34 @@
                ;:password   "apw"
                }))
 
+(defn post-bucket-policy
+    "grants a read-all policy to the bucket, by default in *image-bucket*"
+    []
+    (let [bucketName *image-bucket*
+          credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
+          s3Service (RestS3Service. credentials)
+          s3Bucket (.getBucket s3Service *image-bucket*)
+          policyJson (str "{
+  \"Id\": \"Policy1322209000591\",
+  \"Statement\": [
+    {
+      \"Sid\": \"Stmt1322208993098\",
+      \"Action\": [
+        \"s3:GetObject\"
+      ],
+      \"Effect\": \"Allow\",
+      \"Resource\": \"arn:aws:s3:::" *image-bucket* "/*\",
+      \"Principal\": {
+        \"AWS\": [
+          \"*\"
+        ]
+      }
+    }
+  ]
+}")]
+        (println policyJson)
+        (.setBucketPolicy s3Service *image-bucket* policyJson)))
+
 (defn get-current-user
     "gets the current user, or nil if none is defined"
     []
@@ -295,13 +323,13 @@
     (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
           image-md5 (ServiceUtils/computeMD5Hash (:image-bytes imgmap))
           s3Service (RestS3Service. credentials)
-          bucket (.getBucket s3Service *image-bucket*)
+          s3Bucket (.getBucket s3Service *image-bucket*)
           remote-filename (-image-name imageid filename res (:content-type imgmap))
           s3Object (S3Object. remote-filename (:image-bytes imgmap))]
         (.setContentType s3Object (:content-type imgmap))
         (.setMd5Hash s3Object image-md5)
         (.addMetadata s3Object "owner" (str (:owner imgmap)))
-        (.putObject s3Service bucket s3Object)
+        (.putObject s3Service s3Bucket s3Object)
         (sql/insert-record :s3reference {:bucket *image-bucket* :filename remote-filename
                                          :owner (:owner imgmap) :md5hash image-md5})))
 
