@@ -67,14 +67,9 @@
                                        (str *login-fqurl* "?url=" (url-encode (:url ctx))))))
 
 (defn user-menu [ctx]
-    (try
-        (if (nil? (:user ctx))
-            (no-user-menu ctx)
-            (valid-user-menu ctx))
-        (catch Exception e
-            (println "caught it" e)
-            (.printStackTrace e)
-            (println "foo"))))
+    (if (nil? (:user ctx))
+        (no-user-menu ctx)
+        (valid-user-menu ctx)))
 
 (html/defsnippet new-post-button-snippet
                  "smallblog/templates/snippets.html"

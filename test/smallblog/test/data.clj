@@ -192,9 +192,9 @@
          "test make-image, get-image, and get-images"
          []
          (if false
-             (println "this test contacts s3 and costs money; disabled by default")
+             (println "this test contacts s3 and costs money; disabled")
              (let [loginid (data/make-login (str (now) "@test.com") "password")]
-                 (println "warning: this contacts s3 and will cost money")
+                 (println "warning: this contacts s3 and is costing money")
                  (try
                      (let [path (File. "test/smallblog/test/data/IMG_0568.jpg")
                            imageid (data/make-image "IMG_0568.jpg" "title" "description"
@@ -205,7 +205,6 @@
                          (is (thrown-with-msg? Exception #"No such file or directory"
                                       (data/make-image "foo.tiff" "title" "description"
                                                        "image/tiff" (File. "nonesuch.tiff") loginid)))
-                         (println "imageid" imageid "imageid2" imageid2)
                          (is (not (nil? (data/get-image imageid *image-blog*))))
                          (let [images (data/get-images loginid 3 0)]
                              (is (= 2 (count images)))

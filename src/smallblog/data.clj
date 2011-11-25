@@ -327,7 +327,6 @@
 (defn make-image
     "make an image, returns the id"
     [filename title description content-type path userid]
-    (println "fname" filename "path" path)
     (sql/with-connection *db* (sql/transaction
                                   (-make-image-in-tx filename title description
                                                      content-type path userid))))
