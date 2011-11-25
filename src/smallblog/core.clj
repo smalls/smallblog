@@ -1,5 +1,6 @@
 (ns smallblog.core
-    (:use		[compojure.core]
+    (:use [smallblog.config]
+          [compojure.core]
           [ring.util.response :only (redirect redirect-after-post)]
           [ring.util.codec :only (url-encode)]
           [ring.middleware.json-params]
@@ -8,7 +9,7 @@
           [ring.middleware.stacktrace]
           [sandbar stateful-session auth validation]
           [clojure.contrib.string :only (split)])
-    (:require	[compojure.route :as route]
+    (:require [compojure.route :as route]
               [compojure.handler :as handler]
               [ring.adapter.jetty :as jetty]
               [smallblog.util :as util]
@@ -174,10 +175,14 @@
                            :else (do
                                      (println "XXX should be a log not a print" request)
                                      {:status 400 :body "bad form parameters"})))))
-           (GET templates/*signup-url* [:as request]
-               (if (not (ensure-secure request))
-                   {:status 403}
-                   (render-html-signup)))
+           (GET templates/*signup-url* [token :as request]
+                (if (and
+                        (ensure-secure request)
+                        (or
+                            (nil? *signup-token*)
+                            (= token *signup-token*)))
+                   (render-html-signup)
+                   {:status 403}))
            (POST templates/*signup-url* [email newpw confirmpw :as request]
                (if (not (ensure-secure request))
                    {:status 403}
