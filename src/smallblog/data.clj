@@ -1,17 +1,23 @@
 (ns smallblog.data
-    (:use		[smallblog.templates :only (markdownify
-                                          *image-full* *image-blog* *image-thumb*)]
-        [clojure.contrib.duck-streams :only (to-byte-array)]
-        [clojure.contrib.string :only (split)]
-        [sandbar.auth :only (current-user *sandbar-current-user*
-                                allow-access?)]
-        [sandbar.stateful-session :only (session-put!)])
-    (:require	[clj-sql.core :as sql])
-    (:import	[org.mindrot.jbcrypt BCrypt]
-        [java.io ByteArrayInputStream ByteArrayOutputStream]
-        [javax.imageio ImageIO]
-        [java.awt.image BufferedImageOp]
-        [com.thebuzzmedia.imgscalr Scalr ]))
+    (:use [smallblog.templates :only (markdownify *image-full* *image-blog* *image-thumb*)]
+          [smallblog.config]
+          [clojure.contrib.duck-streams :only (to-byte-array)]
+          [clojure.contrib.string :only (split)]
+          [sandbar.auth :only (current-user *sandbar-current-user* allow-access?)]
+          [sandbar.stateful-session :only (session-put!)]
+          [ring.util.mime-type :only (default-mime-types)])
+    (:require [clj-sql.core :as sql]
+              [clojure.string :as str])
+    (:import [java.io File]
+             [org.mindrot.jbcrypt BCrypt]
+             [java.io ByteArrayInputStream ByteArrayOutputStream FileInputStream]
+             [javax.imageio ImageIO]
+             [java.awt.image BufferedImageOp]
+             [com.thebuzzmedia.imgscalr Scalr]
+             [org.jets3t.service.security AWSCredentials]
+             [org.jets3t.service.utils ServiceUtils]
+             [org.jets3t.service.model S3Object]
+             [org.jets3t.service.impl.rest.httpclient RestS3Service]))
 
 #_ (comment
        postgres
@@ -41,26 +47,28 @@
            PRIMARY KEY(id)
        );
 
-       CREATE TABLE imageblob (
-           id BIGSERIAL,
-           image BYTEA,
-           contenttype TEXT NOT NULL,
-           owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-           PRIMARY KEY(id)
-       );
+        CREATE TABLE s3reference (
+            id BIGSERIAL,
+            bucket TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            md5hash TEXT NOT NULL,
+            owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+            PRIMARY KEY(id)
+        );
 
-       CREATE TABLE image (
-           id BIGSERIAL,
-           owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-           filename TEXT NOT NULL,
-           title TEXT,
-           description TEXT,
-           fullimage BIGINT REFERENCES imageblob,
-           blogwidthimage BIGINT REFERENCES imageblob,
-           thumbnail BIGINT REFERENCES imageblob,
-           created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-           PRIMARY KEY(id)
-       );
+
+        CREATE TABLE image (
+            id BIGSERIAL,
+            owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
+            filename TEXT NOT NULL,
+            title TEXT,
+            description TEXT,
+            fullimage BIGINT REFERENCES s3reference,
+            blogwidthimage BIGINT REFERENCES s3reference,
+            thumbnail BIGINT REFERENCES s3reference,
+            created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
+            PRIMARY KEY(id)
+        );
 
        CREATE TABLE domain (
            id BIGSERIAL,
@@ -78,11 +86,11 @@
 (let [db-host "localhost"
       db-port "5432"
       db-name "smallblog"]
-    (def *db* {:classname		"org.postgresql.Driver"
-               :subprotocol	"postgresql"
-               :subname		(str "//" db-host ":" db-port "/" db-name)
-               ;:user			"auser"
-               ;:password		"apw"
+    (def *db* {:classname   "org.postgresql.Driver"
+               :subprotocol "postgresql"
+               :subname     (str "//" db-host ":" db-port "/" db-name)
+               ;:user       "auser"
+               ;:password   "apw"
                }))
 
 (defn get-current-user
@@ -251,6 +259,17 @@
             :else (throw (Exception.
                              (str "unknown mime type: " desired-content-type))))))
 
+(defn -image-name
+    "create an image name based on id from image table, filename, resolution type, and
+    content-type"
+    [imageid filename res content-type]
+    (let [lastDot (.lastIndexOf filename ".")
+          shortfilename (if (> lastDot 0) (.substring filename 0 lastDot) filename)
+          oldext (if (> lastDot 0) (.substring filename (+ 1 lastDot)) "")
+          newext (first (first (filter #(= content-type (val %)) default-mime-types)))
+          newext (if (or (nil? newext) (str/blank? newext)) oldext newext)]
+        (str imageid "-" shortfilename "-" res "." newext)))
+
 (defn do-scale
     "scales the image, returns the bytes of the image"
     [imagestream full-img-content-type width userid]
@@ -261,50 +280,75 @@
           baos (ByteArrayOutputStream.)]
         (try
             (ImageIO/write scaledimg (last mimetype) baos)
-            {:image (.toByteArray baos) :contenttype (first mimetype)
+            {:image-bytes (.toByteArray baos) :content-type (first mimetype)
              :owner userid}
             (finally (.close baos)))))
 
 (defn scale-image-to-bytes
-    [imagebytes full-img-content-type width userid]
-    (let [bais (ByteArrayInputStream. imagebytes)]
+    [path full-img-content-type width userid]
+    (let [is (FileInputStream. path)]
         (try
-            (do-scale bais full-img-content-type width userid)
-            (finally (.close bais)))))
+            (do-scale is full-img-content-type width userid)
+            (finally (.close is)))))
+
+(defn -do-image-upload
+    "upload the image to s3"
+    [imgmap filename imageid res]
+    (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
+          image-md5 (ServiceUtils/computeMD5Hash (:image-bytes imgmap))
+          s3Service (RestS3Service. credentials)
+          bucket (.getBucket s3Service *image-bucket*)
+          remote-filename (-image-name imageid filename res (:content-type imgmap))
+          s3Object (S3Object. remote-filename (:image-bytes imgmap))]
+        (.setContentType s3Object (:content-type imgmap))
+        (.setMd5Hash s3Object image-md5)
+        (.addMetadata s3Object "owner" (:owner imgmap))
+        (.putObject s3Service bucket s3Object)
+        (sql/insert-record :s3reference {:bucket *image-bucket* :filename remote-filename
+                                         :owner (:owner imgmap) :md5hash image-md5})))
+
+(defn -make-image-in-tx
+    "helped for make-image; must be run in a tx within a db connection"
+    [filename title description content-type path userid]
+    (let [imageid (sql/insert-record :image {:filename filename :title title
+                                              :description description :owner userid})
+          full-map {:image-bytes (to-byte-array path) :content-type content-type
+                    :owner userid}
+          blog-map (scale-image-to-bytes path content-type 550 userid)
+          thumb-map (scale-image-to-bytes path content-type 150 userid)
+          full-s3id (-do-image-upload full-map filename imageid *image-full*)
+          blog-s3id (-do-image-upload blog-map filename imageid *image-blog*)
+          thumb-s3id (-do-image-upload thumb-map filename imageid *image-thumb*)]
+        (sql/update-values :image ["id=? and owner=?" imageid userid]
+                           {:fullimage full-s3id :blogwidthimage blog-s3id
+                            :thumbnail thumb-s3id})
+        imageid))
 
 (defn make-image
     "make an image, returns the id"
     [filename title description content-type path userid]
-    (let [imagebytes (to-byte-array path)]
-        (sql/with-connection *db* (sql/transaction
-                                      (let [fullimageid (sql/insert-record :imageblob
-                                                            {:contenttype content-type
-                                                             :image imagebytes :owner userid})
-                                            thumbimageid (sql/insert-record :imageblob
-                                                             (scale-image-to-bytes imagebytes content-type 150
-                                                                 userid))
-                                            blogimageid (sql/insert-record :imageblob
-                                                            (scale-image-to-bytes imagebytes content-type 550
-                                                                userid))]
-                                          (sql/insert-record :image
-                                              {:filename filename :title title :description description
-                                               :owner userid :fullimage fullimageid
-                                               :blogwidthimage blogimageid
-                                               :thumbnail thumbimageid}))))))
+    (println "fname" filename "path" path)
+    (sql/with-connection *db* (sql/transaction
+                                  (-make-image-in-tx filename title description
+                                                     content-type path userid))))
 
 (defn get-image-results
     "get the image result object, including the imageblob specified by id.
     Must have an open db connection."
-    [image blobid]
-    (sql/with-query-results rs ["select * from imageblob where id=?" blobid]
-        (let [blob (first rs)]
-            (if (nil? blob)
+    [image s3id]
+    (sql/with-query-results rs ["select * from s3reference where id=?" s3id]
+        (let [s3ref (first rs)]
+            (if (nil? s3ref)
                 nil
-                {:filename (:filename image)
-                 :title (:title image)
-                 :description (:description image)
-                 :image (ByteArrayInputStream. (:image blob))
-                 :content-type (:contenttype blob)}))))
+                (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
+                      s3Service (RestS3Service. credentials)
+                      s3Bucket (.getBucket s3Service *image-bucket*)
+                      s3Object (.getObject s3Bucket (:filename image))]
+                    {:filename (:filename image)
+                     :title (:title image)
+                     :description (:description image)
+                     :image-bytes (.getDataInputStream s3Object)
+                     :content-type (.getContentType s3Object)})))))
 
 (defn get-image
     "returns a map with :filename, :title, :description (from image table)

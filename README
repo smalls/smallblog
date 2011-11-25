@@ -9,6 +9,9 @@ the connection strings (also in data.clj).
 
 ## Usage
 
+To start, copy src/smallblog/config.clj.template to src/smallblog/config.clj
+and change the parameters to match your system.
+
 By default, the server starts both Jetty and a NailGun server (for VimClojure).
 It's pretty easy to disable NailGun, look at core.clj.  To start the server,
 run:

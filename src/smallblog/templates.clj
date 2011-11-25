@@ -1,11 +1,11 @@
 (ns smallblog.templates
-    (:use			[ring.util.codec :only (url-encode)]
+    (:use [ring.util.codec :only (url-encode)]
           [clojure.string :only (join)])
-    (:require		[net.cgrand.enlive-html :as html]
+    (:require [net.cgrand.enlive-html :as html]
               [clj-time.core :as clj-time]
               [clj-time.format :as clj-time-format]
               [clj-time.coerce :as clj-time-coerce])
-    (:import		[org.mozilla.javascript Context ScriptableObject]))
+    (:import [org.mozilla.javascript Context ScriptableObject]))
 
 (def *https-port* 4330)
 (def *server* "localhost")

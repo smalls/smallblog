@@ -1,6 +1,6 @@
 (ns smallblog.test.data
     (:use		[smallblog.core]
-        [smallblog.templates :only (*image-blog*)]
+        [smallblog.templates :only (*image-blog*, *image-full*, *image-thumb*)]
         [clojure.test]
         [sandbar.auth :only (*sandbar-current-user*)]
         [sandbar.stateful-session :only (sandbar-session)]
@@ -174,31 +174,49 @@
          (is (= ["image/png" "png"] (data/get-content-type "image/gif")))
          (is (= ["image/png" "png"] (data/get-content-type "image/nonesuch"))))
 
+(deftest test-image-name []
+         (is (= "12-lamematt-full.jpg"
+                (data/-image-name 12 "lamematt.png" *image-full* "image/jpeg")))
+         (is (= "12-lamematt-blog.png"
+                (data/-image-name 12 "lamematt.png" *image-blog* "image/png")))
+         (is (= "abc-lamematt.bar-blog.jpg"
+                (data/-image-name "abc" "lamematt.bar.png" *image-blog* "image/jpeg")))
+         (is (= "abc-lamematt.bar-blog.png"
+                (data/-image-name "abc" "lamematt.bar.png" *image-blog* "image/jabcd")))
+         (is (= "abc-lamematt.bar-blog.jpg"
+                (data/-image-name "abc" "lamematt.bar." *image-blog* "image/jpeg")))
+         (is (= "abc-lamematt-blog.jpg"
+                (data/-image-name "abc" "lamematt" *image-blog* "image/jpeg"))))
+
 (deftest test-make-image
          "test make-image, get-image, and get-images"
          []
-         (let [loginid (data/make-login (str (now) "@test.com") "password")]
-             (try
-                 (let [path (File. "test/smallblog/test/data/IMG_0568.jpg")
-                       imageid (data/make-image "IMG_0568.jpg" "title" "description"
-                                   "image/tiff" path loginid)
-                       imageid (data/make-image "IMG_0568.jpg" "title2" "description"
-                                   "image/tiff" path loginid)]
-                     (is (.exists path))
-                     (is (thrown? FileNotFoundException 
-                             (data/make-image "foo.tiff" "title" "description"
-                                 "image/tiff" (File. "nonesuch.tiff") loginid)))
-                     (is (not (nil? (data/get-image imageid *image-blog*))))
-                     (let [images (data/get-images loginid 3 0)]
-                         (is (= 2 (count images)))
-                         (is (= "title2" (:title (first images)))))
-                     (let [images (data/get-images loginid 1 0)]
-                         (is (= 1 (count images)))
-                         (is (= "title2" (:title (first images)))))
-                     (let [images (data/get-images loginid 1 1)]
-                         (is (= 1 (count images)))
-                         (is (= "title" (:title (first images))))))
-                 (finally (data/delete-login loginid)))))
+         (if false
+             (println "this test contacts s3 and costs money; disabled by default")
+             (let [loginid (data/make-login (str (now) "@test.com") "password")]
+                 (println "warning: this contacts s3 and will cost money")
+                 (try
+                     (let [path (File. "test/smallblog/test/data/IMG_0568.jpg")
+                           imageid (data/make-image "IMG_0568.jpg" "title" "description"
+                                                    "image/tiff" path loginid)
+                           imageid2 (data/make-image "IMG_0568.jpg" "title2" "description"
+                                                    "image/tiff" path loginid)]
+                         (is (.exists path))
+                         (is (thrown-with-msg? Exception #"No such file or directory"
+                                      (data/make-image "foo.tiff" "title" "description"
+                                                       "image/tiff" (File. "nonesuch.tiff") loginid)))
+                         (println "imageid" imageid "imageid2" imageid2)
+                         (is (not (nil? (data/get-image imageid *image-blog*))))
+                         (let [images (data/get-images loginid 3 0)]
+                             (is (= 2 (count images)))
+                             (is (= "title2" (:title (first images)))))
+                         (let [images (data/get-images loginid 1 0)]
+                             (is (= 1 (count images)))
+                             (is (= "title2" (:title (first images)))))
+                         (let [images (data/get-images loginid 1 1)]
+                             (is (= 1 (count images)))
+                             (is (= "title" (:title (first images))))))
+                     (finally (data/delete-login loginid))))))
 
 (deftest test-domains
          "test make-domain, get-domain, and get-user-domains"

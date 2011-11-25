@@ -1,0 +1,5 @@
+(ns smallblog.config)
+
+(def *aws-access-key* "foo")
+(def *aws-secret-key* "foo")
+(def *image-bucket* "splendous-test")
