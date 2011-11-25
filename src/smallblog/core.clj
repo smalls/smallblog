@@ -222,7 +222,7 @@
                (let [image (data/get-image (Integer/parseInt imgid) res)]
                    (if (nil? image)
                        nil
-                       {:body (:image image)
+                       {:body (:image-bytes image)
                         ; XXX need to add cache control to this
                         :headers {"Content-Type" (:content-type image)
                                   "filename" (:filename image)}})))
