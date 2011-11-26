@@ -51,6 +51,7 @@
             id BIGSERIAL,
             bucket TEXT NOT NULL,
             filename TEXT NOT NULL,
+            contenttype TEXT NOT NULL,
             md5hash TEXT NOT NULL,
             owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
             PRIMARY KEY(id)
@@ -90,34 +91,6 @@
                ;:user       "auser"
                ;:password   "apw"
                }))
-
-(defn post-bucket-policy
-    "grants a read-all policy to the bucket, by default in *image-bucket*"
-    []
-    (let [bucketName *image-bucket*
-          credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
-          s3Service (RestS3Service. credentials)
-          s3Bucket (.getBucket s3Service *image-bucket*)
-          policyJson (str "{
-  \"Id\": \"Policy1322209000591\",
-  \"Statement\": [
-    {
-      \"Sid\": \"Stmt1322208993098\",
-      \"Action\": [
-        \"s3:GetObject\"
-      ],
-      \"Effect\": \"Allow\",
-      \"Resource\": \"arn:aws:s3:::" *image-bucket* "/*\",
-      \"Principal\": {
-        \"AWS\": [
-          \"*\"
-        ]
-      }
-    }
-  ]
-}")]
-        (println policyJson)
-        (.setBucketPolicy s3Service *image-bucket* policyJson)))
 
 (defn get-current-user
     "gets the current user, or nil if none is defined"
@@ -331,7 +304,8 @@
         (.addMetadata s3Object "owner" (str (:owner imgmap)))
         (.putObject s3Service s3Bucket s3Object)
         (sql/insert-record :s3reference {:bucket *image-bucket* :filename remote-filename
-                                         :owner (:owner imgmap) :md5hash image-md5})))
+                                         :owner (:owner imgmap) :md5hash image-md5
+                                         :contenttype (:content-type imgmap)})))
 
 (defn -make-image-in-tx
     "helped for make-image; must be run in a tx within a db connection"
@@ -357,40 +331,59 @@
                                   (-make-image-in-tx filename title description
                                                      content-type path userid))))
 
-(defn get-image-results
+(defn -get-image-bytes-from-s3 [filename]
+    (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
+          s3Service (RestS3Service. credentials)
+          s3Bucket (.getBucket s3Service *image-bucket*)
+          s3Object (.getObject s3Service s3Bucket filename)]
+        (.getDataInputStream s3Object)))
+
+(defn -get-image-results
     "get the image result object, including the imageblob specified by id.
     Must have an open db connection."
-    [image s3id]
+    [image s3id include-bytes?]
     (sql/with-query-results rs ["select * from s3reference where id=?" s3id]
         (let [s3ref (first rs)]
             (if (nil? s3ref)
                 nil
-                (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
-                      s3Service (RestS3Service. credentials)
-                      s3Bucket (.getBucket s3Service *image-bucket*)
-                      s3Object (.getObject s3Service s3Bucket (:filename s3ref))]
-                    {:filename (:filename image)
-                     :title (:title image)
-                     :description (:description image)
-                     :image-bytes (.getDataInputStream s3Object)
-                     :content-type (.getContentType s3Object)})))))
+                {:filename (:filename image)
+                 :title (:title image)
+                 :description (:description image)
+                 :remote-filename (:filename s3ref)
+                 :content-type (:contenttype s3ref)
+                 :image-bytes (if include-bytes?
+                                  (-get-image-bytes-from-s3 (:filename s3ref)
+                                  nil))}))))
 
-(defn get-image
-    "returns a map with :filename, :title, :description (from image table)
-    and :image (as a stream), :content-type from imageblob"
-    [imageid res]
+
+(defn -get-image
+    "returns a map with :filename, :title, :description (from image table),
+    :content-type, and optionally :image (as a stream)"
+    [imageid res include-bytes?]
     (sql/with-connection *db*
         (sql/with-query-results rs ["select * from image where id=?" imageid]
             (let [image (first rs)]
                 (cond
                     (nil? image) nil
-                    (= *image-full* res) (get-image-results image
-                                             (:fullimage image))
-                    (= *image-blog* res) (get-image-results image
-                                             (:blogwidthimage image))
-                    (= *image-thumb* res) (get-image-results image
-                                              (:thumbnail image))
+                    (= *image-full* res) (-get-image-results image
+                                             (:fullimage image) include-bytes?)
+                    (= *image-blog* res) (-get-image-results image
+                                             (:blogwidthimage image) include-bytes?)
+                    (= *image-thumb* res) (-get-image-results image
+                                              (:thumbnail image) include-bytes?)
                     :else nil)))))
+
+(defn get-image
+    "returns a map with :filename, :title, :description (from image table)
+    and :image (as a stream), :content-type from imageblob"
+    [imageid res]
+    (-get-image imageid res true))
+
+(defn get-image-header
+    "get only the header information (filename, title, dscription, content-type) for an
+    image"
+    [imageid res]
+    (-get-image imageid res false))
 
 (defn get-images
     "returns some basic info about images with the specified offset for the

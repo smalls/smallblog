@@ -218,14 +218,20 @@
                            (get params "description") (:content-type image)
                            (:tempfile image) (:id (data/get-current-user)))
                        (redirect-after-post templates/*image-url*))))
-           (GET (str templates/*image-url* "/:imgid/:res") [imgid res]
-               (let [image (data/get-image (Integer/parseInt imgid) res)]
+           (GET (str templates/*image-url* "/:imgid/:res") [imgid res :as request]
+               (let [image (data/get-image-header (Integer/parseInt imgid) res)]
                    (if (nil? image)
                        nil
-                       {:body (:image-bytes image)
-                        ; XXX need to add cache control to this
-                        :headers {"Content-Type" (:content-type image)
-                                  "filename" (:filename image)}})))
+                       (redirect (str (name (:scheme request)) "://"
+                                      *image-bucket* ".s3.amazonaws.com/"
+                                      (:remote-filename image))))))
+                       ;{:status  301
+                       ; :headers {"Location" (str (name (:scheme request)) "://"
+                       ;                           *image-bucket* ".s3.amazonaws.com/"
+                       ;                           (:remote-filename image))}
+                       ; :body    ""})))
+                        
+                       
 
 
            ; "api urls"

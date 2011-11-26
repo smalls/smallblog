@@ -10,7 +10,26 @@ Copy src/smallblog/config.clj.template to src/smallblog/config.clj and change
 the parameters to match your system.
 
 If you want to use S3 to store images, you'll need to set your bucket
-permissions.  See src/smallblog/data.clj, post-bucket-policy.  You can run it
+permissions (which you can do from the AWS web page, bucket properties -> Edit bucket policy.
+A policy might look like this:
+
+{
+	"Version": "2008-10-17",
+	"Statement": [
+		{
+			"Sid": "AddPerm",
+			"Effect": "Allow",
+			"Principal": {
+				"AWS": "*"
+			},
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::splendous-test/*"
+		}
+	]
+}
+
+
+
 from a REPL, and it'll upload the policy to the bucket stored in *image-bucket*
 specified in config.cfl.
 
