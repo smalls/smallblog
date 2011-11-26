@@ -23,7 +23,7 @@ A policy might look like this:
 				"AWS": "*"
 			},
 			"Action": "s3:GetObject",
-			"Resource": "arn:aws:s3:::splendous-test/*"
+			"Resource": "arn:aws:s3:::smallblog-test/*"
 		}
 	]
 }
