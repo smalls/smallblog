@@ -1,13 +1,14 @@
 (ns smallblog.test.data
-    (:use		[smallblog.core]
-        [smallblog.templates :only (*image-blog*, *image-full*, *image-thumb*)]
-        [clojure.test]
-        [sandbar.auth :only (*sandbar-current-user*)]
-        [sandbar.stateful-session :only (sandbar-session)]
-        [clj-time.core :only (now)])
-    (:require	[smallblog.data :as data]
-        [clj-sql.core :as sql])
-    (:import	[java.io File FileNotFoundException]))
+    (:use [smallblog.core]
+          [smallblog.config]
+          [smallblog.templates :only (*image-blog*, *image-full*, *image-thumb*)]
+          [clojure.test]
+          [sandbar.auth :only (*sandbar-current-user*)]
+          [sandbar.stateful-session :only (sandbar-session)]
+          [clj-time.core :only (now)])
+    (:require [smallblog.data :as data]
+              [clj-sql.core :as sql])
+    (:import [java.io File FileNotFoundException]))
 
 (deftest test-login
          "test basic creation and retrival of login rows, test-login-for-session,
@@ -119,7 +120,7 @@
                  (let [blogid (:id (data/make-blog loginid "blogname"))
                        postid (:id (data/make-post blogid "title" "content"))]
                      (data/delete-blog blogid)
-                     (sql/with-connection data/*db*
+                     (sql/with-connection *db*
                          (sql/with-query-results rs
                              ["select * from post where id=?" postid]
                              (is (= 0 (count rs))))))

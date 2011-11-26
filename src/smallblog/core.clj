@@ -225,13 +225,6 @@
                        (redirect (str (name (:scheme request)) "://"
                                       *image-bucket* ".s3.amazonaws.com/"
                                       (:remote-filename image))))))
-                       ;{:status  301
-                       ; :headers {"Location" (str (name (:scheme request)) "://"
-                       ;                           *image-bucket* ".s3.amazonaws.com/"
-                       ;                           (:remote-filename image))}
-                       ; :body    ""})))
-                        
-                       
 
 
            ; "api urls"

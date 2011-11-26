@@ -82,16 +82,6 @@
        ;to describe a table: psql$ \d+ tablename
        )
 
-(let [db-host "localhost"
-      db-port "5432"
-      db-name "smallblog"]
-    (def *db* {:classname   "org.postgresql.Driver"
-               :subprotocol "postgresql"
-               :subname     (str "//" db-host ":" db-port "/" db-name)
-               ;:user       "auser"
-               ;:password   "apw"
-               }))
-
 (defn get-current-user
     "gets the current user, or nil if none is defined"
     []

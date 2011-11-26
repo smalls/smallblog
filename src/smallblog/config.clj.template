@@ -1,5 +1,16 @@
 (ns smallblog.config)
 
+; db configuration
+(let [db-host "localhost"
+      db-port "5432"
+      db-name "smallblog"]
+    (def *db* {:classname   "org.postgresql.Driver"
+               :subprotocol "postgresql"
+               :subname     (str "//" db-host ":" db-port "/" db-name)
+               ;:user       "auser"
+               ;:password   "apw"
+               }))
+
 ; AWS configuration
 (def *aws-access-key* "foo")
 (def *aws-secret-key* "foo")

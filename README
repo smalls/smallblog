@@ -4,7 +4,7 @@ A small basic blog system.
 
 By default it'll store information in PostgreSQL, so you'll need to have a
 server running.  The schema is stored in data.clj, and you may need to modify
-the connection strings (also in data.clj).
+the connection strings (in config.clj).
 
 Copy src/smallblog/config.clj.template to src/smallblog/config.clj and change
 the parameters to match your system.
