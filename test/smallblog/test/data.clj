@@ -93,7 +93,8 @@
                  (finally (data/delete-login loginid)))))
 
 (deftest post
-         "test basic creation of posts - including (make-post), (get-posts 1 0), and (get-post id)"
+         "test basic creation of posts - including (make-post), (get-posts 1 0),
+         (get-post id), and (count-posts)"
          []
          (let [content (str "some **content** " (now))
                expected-markdown-content "<p>some <strong>content</strong>"
@@ -104,7 +105,8 @@
                      (is (= expected-markdown-content
                              (subs (:converted_content new-row) 0
                                  (count expected-markdown-content))))
-                     (is (= content (:content new-row))))
+                     (is (= content (:content new-row)))
+                     (is (= 1 (data/count-posts blogid))))
                  (let [result (data/get-posts blogid 2 0)]
                      (is (= 1 (count result)))
                      (is (= content (get (first result) :content)))
@@ -138,6 +140,7 @@
                  (data/make-post blogid "title" content1)
                  (data/make-post blogid "title" content2)
                  (data/make-post blogid "title" content3)
+                 (is (= 3 (data/count-posts blogid)))
                  (let [result (data/get-posts blogid 1 0)]
                      (is (= 1 (count result)))
                      (is (= content3 (get (first result) :content))))

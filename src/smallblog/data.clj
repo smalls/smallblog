@@ -210,6 +210,12 @@
             ["select * from post where blogid=? and id=?" (int blogid) id]
             (first rs))))
 
+(defn count-posts [blogid]
+    (sql/with-connection *db*
+                         (sql/with-query-results rs
+                                                 ["select count(*) from post where blogid=?"
+                                                  blogid]
+                                                 (:count (first rs)))))
 (defn get-posts [blogid number offset]
     (sql/with-connection *db*
         (sql/with-query-results rs
