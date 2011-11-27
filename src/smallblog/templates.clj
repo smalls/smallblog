@@ -81,17 +81,22 @@
         (html/content (new-post-button-snippet ctx))
         nil))
 
+(defn -main-div-post [ctx]
+    (html/clone-for [item (:posts ctx)]
+                    [:.posttitle] (html/content (:title item))
+                    [:.postdate] (html/content
+                                     (clj-time-format/unparse
+                                         date-output-format
+                                         (clj-time-coerce/from-date (:created_date item))))
+                    [:.postbody] (html/html-content (:converted_content item))))
+
 (html/deftemplate main "smallblog/templates/main.html"
                   [ctx]
                   [:p#blogname] (html/content (:blogname ctx))
                   [:head :title] (html/content (:blogname ctx))
                   [:#menu] (html/content (user-menu ctx))
                   [:#newpost] (new-post-button ctx)
-                  [:div.post] (html/clone-for [item (:posts ctx)]
-                                  [:.posttitle] (html/content (:title item))
-                                  [:.postdate] (html/content (clj-time-format/unparse date-output-format
-                                                                 (clj-time-coerce/from-date (:created_date item))))
-                                  [:.postbody] (html/html-content (:converted_content item))))
+                  [:div.post] (-main-div-post ctx))
 
 (html/deftemplate newpost "smallblog/templates/newpost.html"
                   [ctx]
