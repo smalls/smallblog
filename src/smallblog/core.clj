@@ -41,10 +41,13 @@
                        (clj-time-format/formatters :basic-date-time)
                        (clj-time-coerce/from-date (:created_date blog)))})
 
-(defn render-html-posts [posts url blogname blogid]
+(defn render-html-posts
+    [posts url blogname blogid page pagination]
     (templates/main {:blogname blogname, :posts posts
                      :user (data/get-current-user) :url url
-                     :is-blog-owner (data/blog-owner? blogid)}))
+                     :is-blog-owner (data/blog-owner? blogid)
+                     :pagination pagination :page page
+                     :total-posts (data/count-posts blogid)}))
 
 (defn render-html-newpost [blogname]
     (templates/newpost {:blogname blogname
@@ -95,13 +98,26 @@
 (defn ensure-secure [request]
     (= :https (:scheme request)))
 
-(defn render-html-posts-helper [blogid request]
-    (render-html-posts
-        (data/get-posts blogid 10 0)
-        (util/uri-from-request request)
-        (:title (data/get-blog blogid))
-        blogid))
+(defn -get-posts-with-pagination
+    "obeys pagination when getting posts; reads pagination info from request"
+    [blogid request page pagination]
+    (data/get-posts blogid pagination (* page pagination)))
 
+(defn render-html-posts-helper [blogid request]
+    (let [req-params (:params request)
+          page (if (contains? req-params "page")
+                   (Integer/parseInt (get req-params "page"))
+                   0)
+          pagination (if (contains? req-params "pagination")
+                         (Integer/parseInt (get req-params "pagination"))
+                         10)]
+        (render-html-posts
+            (-get-posts-with-pagination blogid request page pagination)
+            (util/uri-from-request request)
+            (:title (data/get-blog blogid))
+            blogid
+            page
+            pagination)))
 
 (defroutes main-routes
            (GET "/" [:as request]

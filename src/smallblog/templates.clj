@@ -90,13 +90,34 @@
                                          (clj-time-coerce/from-date (:created_date item))))
                     [:.postbody] (html/html-content (:converted_content item))))
 
+(defn -is-first-page? [page pagination total-posts]
+    (= 0 page))
+
+(defn -number-of-pages [pagination total-posts]
+    (int (/ total-posts pagination)))
+
+(defn -is-last-page? [page pagination total-posts]
+    (= page (-number-of-pages pagination total-posts)))
+
+(defn -pager-text [page pagination total-posts]
+    (str "Page " (+ 1 page) " of " (+ 1 (-number-of-pages pagination total-posts))))
+
 (html/deftemplate main "smallblog/templates/main.html"
                   [ctx]
                   [:p#blogname] (html/content (:blogname ctx))
                   [:head :title] (html/content (:blogname ctx))
                   [:#menu] (html/content (user-menu ctx))
                   [:#newpost] (new-post-button ctx)
-                  [:div.post] (-main-div-post ctx))
+                  [:div.post] (-main-div-post ctx)
+                  [:a#pager-newer] (if (-is-first-page?
+                                           (:page ctx) (:pagination ctx) (:total-posts ctx))
+                                       nil)
+                  [:a#pager-older] (if (-is-last-page?
+                                           (:page ctx) (:pagination ctx) (:total-posts ctx))
+                                       nil)
+                  [:span#pager-text] (html/content (-pager-text
+                                                       (:page ctx) (:pagination ctx)
+                                                       (:total-posts ctx))))
 
 (html/deftemplate newpost "smallblog/templates/newpost.html"
                   [ctx]

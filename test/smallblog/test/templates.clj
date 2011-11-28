@@ -37,4 +37,18 @@
              (is (= "second" (get result 3)))
              (is (nil? (get result 4)))))
 
+(deftest test-is-first-page?
+         (is (= true (-is-first-page? 0 10 11)))
+         (is (= false (-is-first-page? 1 10 11))))
 
+(deftest test-is-last-page?
+         (is (= true (-is-last-page? 0 10 0)))
+         (is (= false (-is-last-page? 0 10 11)))
+         (is (= true (-is-last-page? 1 10 11))))
+
+(deftest test-pager-text
+         (is (= "Page 1 of 1" (-pager-text 0 10 0)))
+         (is (= "Page 1 of 2" (-pager-text 0 10 11)))
+         (is (= "Page 2 of 2" (-pager-text 1 10 11))))
+
+(deftest test-pagination-calculation)
