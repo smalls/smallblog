@@ -250,6 +250,7 @@
                                       (data/make-blog userid title)))))
            (GET "/api/blog/:bid/post/" [bid]
                (let [bid (Integer/parseInt bid)]
+                   ; XXX need to paginate the API
                    (json-response (doall (for [post (data/get-posts bid 10 0)]
                                              (render-post-json post))))))
            (POST "/api/blog/:bid/post/" [bid title content]
