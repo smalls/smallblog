@@ -212,10 +212,11 @@
 
 (defn count-posts [blogid]
     (sql/with-connection *db*
-                         (sql/with-query-results rs
-                                                 ["select count(*) from post where blogid=?"
-                                                  blogid]
-                                                 (:count (first rs)))))
+                         (sql/with-query-results
+                             rs
+                             ["select count(*) from post where blogid=?" blogid]
+                             (:count (first rs)))))
+
 (defn get-posts [blogid number offset]
     (sql/with-connection *db*
         (sql/with-query-results rs
@@ -348,8 +349,7 @@
                  :remote-filename (:filename s3ref)
                  :content-type (:contenttype s3ref)
                  :image-bytes (if include-bytes?
-                                  (-get-image-bytes-from-s3 (:filename s3ref)
-                                  nil))}))))
+                                  (-get-image-bytes-from-s3 (:filename s3ref)))}))))
 
 
 (defn -get-image

@@ -209,7 +209,9 @@
                          (is (thrown-with-msg? Exception #"No such file or directory"
                                       (data/make-image "foo.tiff" "title" "description"
                                                        "image/tiff" (File. "nonesuch.tiff") loginid)))
-                         (is (not (nil? (data/get-image imageid *image-blog*))))
+                         (let [image (data/get-image imageid *image-blog*)]
+                             (is (not (nil? image)))
+                             (.close (:image-bytes image)))
                          (let [images (data/get-images loginid 3 0)]
                              (is (= 2 (count images)))
                              (is (= "title2" (:title (first images)))))
