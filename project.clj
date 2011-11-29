@@ -6,7 +6,7 @@
                              [ring-json-params "0.1.3"]
                              [compojure "0.6.5"]
                              [clj-time "0.3.0"]
-                             [clj-sql "0.0.5"]
+                             [org.clojure/java.jdbc "0.1.1"]
                              [enlive "1.0.0"]
                              [rhino/js "1.7R2"]
                              [sandbar/sandbar "0.3.0"]

@@ -7,7 +7,7 @@
           [sandbar.stateful-session :only (sandbar-session)]
           [clj-time.core :only (now)])
     (:require [smallblog.data :as data]
-              [clj-sql.core :as sql])
+              [clojure.java.jdbc :as sql])
     (:import [java.io File FileNotFoundException]))
 
 (deftest test-login

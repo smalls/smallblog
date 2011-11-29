@@ -6,7 +6,7 @@
           [sandbar.auth :only (current-user *sandbar-current-user* allow-access?)]
           [sandbar.stateful-session :only (session-put!)]
           [ring.util.mime-type :only (default-mime-types)])
-    (:require [clj-sql.core :as sql]
+    (:require [clojure.java.jdbc :as sql]
               [clojure.string :as str])
     (:import [java.io File]
              [org.mindrot.jbcrypt BCrypt]
@@ -174,8 +174,8 @@
         (make-login email password))
     ([email password]
         (sql/with-connection *db*
-            (sql/insert-record :login {:email email
-                                       :password (-hash-pw password)}))))
+            (:id (sql/insert-record :login {:email email
+                                       :password (-hash-pw password)})))))
 
 (defn delete-login [id]
     (sql/with-connection *db*
@@ -194,10 +194,11 @@
         (sql/with-query-results rs ["select * from blog where id=?" id]
             (first rs))))
 
-(defn make-blog [login_id title]
+(defn make-blog
+    "create a new blog, and return the row"
+    [login_id title]
     (sql/with-connection *db*
-        (let [id (sql/insert-record :blog {:title title :owner login_id})]
-            (get-blog id))))
+        (sql/insert-record :blog {:title title :owner login_id})))
 
 (defn delete-blog [id]
     (sql/with-connection *db*
@@ -228,10 +229,9 @@
     "create a post, retrieve the newly inserted post"
     [blogid title content]
     (sql/with-connection *db*
-        (let [id (sql/insert-record :post
+        (sql/insert-record :post
                      {:title title :content content :blogid blogid
-                      :converted_content (markdownify content)})]
-            (get-post blogid id))))
+                      :converted_content (markdownify content)})))
 
 (defn get-content-type
     "get the image content type and format; map gif to png, otherwise make a
@@ -288,7 +288,7 @@
             (finally (.close is)))))
 
 (defn -do-image-upload
-    "upload the image to s3"
+    "upload the image to s3, and return the id of the new s3reference row"
     [imgmap filename imageid res]
     (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)
           image-md5 (ServiceUtils/computeMD5Hash (:image-bytes imgmap))
@@ -300,15 +300,18 @@
         (.setMd5Hash s3Object image-md5)
         (.addMetadata s3Object "owner" (str (:owner imgmap)))
         (.putObject s3Service s3Bucket s3Object)
-        (sql/insert-record :s3reference {:bucket *image-bucket* :filename remote-filename
-                                         :owner (:owner imgmap) :md5hash image-md5
-                                         :contenttype (:content-type imgmap)})))
+        (:id (sql/insert-record :s3reference {:bucket *image-bucket*
+                                              :filename remote-filename
+                                              :owner (:owner imgmap) :md5hash image-md5
+                                              :contenttype (:content-type imgmap)}))))
 
 (defn -make-image-in-tx
-    "helped for make-image; must be run in a tx within a db connection"
+    "helped for make-image; must be run in a tx within a db connection.  Returns the id
+    of the new image."
     [filename title description content-type path userid]
-    (let [imageid (sql/insert-record :image {:filename filename :title title
+    (let [imagerow (sql/insert-record :image {:filename filename :title title
                                               :description description :owner userid})
+          imageid (:id imagerow)
           full-map {:image-bytes (to-byte-array path) :content-type content-type
                     :owner userid}
           blog-map (scale-image-to-bytes path content-type 550 userid)
@@ -397,9 +400,8 @@
         (make-domain domainname userid nil))
     ([domainname userid blogid]
         (sql/with-connection *db*
-            (let [id (sql/insert-record :domain
-                         {:domain domainname :owner userid :blogid blogid})]
-                id))))
+            (:id (sql/insert-record :domain
+                         {:domain domainname :owner userid :blogid blogid})))))
 
 (defn get-domain [domainname]
     (sql/with-connection *db*
