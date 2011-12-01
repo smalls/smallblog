@@ -181,7 +181,10 @@
                                    [:.imglink] (html/set-attr :href
                                                    (str *image-url* "/" (:id item) "/" *image-full*))
                                    [:.imgdisp] (html/set-attr :src
-                                                   (str *image-url* "/" (:id item) "/" *image-blog*))))
+                                                   (str *image-url* "/" (:id item) "/" *image-blog*)))
+                  [:option.blog] (html/clone-for [item (:blogs ctx)]
+                                                 [:.blog] (html/set-attr :value (:id item))
+                                                 [:.blog] (html/content (:title item))))
 
 (html/deftemplate signup "smallblog/templates/signup.html"
                   [ctx]

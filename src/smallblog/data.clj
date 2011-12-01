@@ -246,9 +246,10 @@
 (defn -make-image-in-tx
     "helped for make-image; must be run in a tx within a db connection.  Returns the id
     of the new image."
-    [filename title description content-type path userid]
+    [filename title description content-type path blogid userid]
     (let [imagerow (sql/insert-record :image {:filename filename :title title
-                                              :description description :owner userid})
+                                              :description description :owner userid
+                                              :blog blogid})
           imageid (:id imagerow)
           full-map {:image-bytes (to-byte-array path) :content-type content-type
                     :owner userid}
@@ -264,10 +265,10 @@
 
 (defn make-image
     "make an image, returns the id"
-    [filename title description content-type path userid]
+    [filename title description content-type path blogid userid]
     (sql/with-connection *db* (sql/transaction
                                   (-make-image-in-tx filename title description
-                                                     content-type path userid))))
+                                                     content-type path blogid userid))))
 
 (defn -get-image-bytes-from-s3 [filename]
     (let [credentials (AWSCredentials. *aws-access-key* *aws-secret-key*)

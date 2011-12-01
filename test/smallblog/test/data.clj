@@ -202,13 +202,14 @@
                  (try
                      (let [path (File. "test/smallblog/test/data/IMG_0568.jpg")
                            imageid (data/make-image "IMG_0568.jpg" "title" "description"
-                                                    "image/tiff" path loginid)
+                                                    "image/tiff" path nil loginid)
                            imageid2 (data/make-image "IMG_0568.jpg" "title2" "description"
-                                                    "image/tiff" path loginid)]
+                                                    "image/tiff" path nil loginid)]
                          (is (.exists path))
                          (is (thrown-with-msg? Exception #"No such file or directory"
                                       (data/make-image "foo.tiff" "title" "description"
-                                                       "image/tiff" (File. "nonesuch.tiff") loginid)))
+                                                       "image/tiff" (File. "nonesuch.tiff")
+                                                       nil loginid)))
                          (let [image (data/get-image imageid *image-blog*)]
                              (is (not (nil? image)))
                              (.close (:image-bytes image)))

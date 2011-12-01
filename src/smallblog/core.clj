@@ -63,8 +63,10 @@
     (templates/signup {}))
 
 (defn render-html-images [images]
-    (templates/images {:images images
-                       :user (data/get-current-user)}))
+    (let [userid (:id (data/get-current-user))]
+        (templates/images {:images images
+                           :blogs (data/get-blogs userid)
+                           :user (data/get-current-user)})))
 
 (defn render-json-images [images]
     (map #(identity {:id (:id %), :title (:title %), :description (:description %),
@@ -229,10 +231,17 @@
                                        (:id (data/get-current-user)) 10 0)))
            (wrap-multipart-params
                (POST templates/*image-url* {params :params}
-                   (let [image (get params "image")]
-                       (data/make-image (:filename image) (get params "title")
-                           (get params "description") (:content-type image)
-                           (:tempfile image) (:id (data/get-current-user)))
+                   (let [image (get params "image")
+                         blogid (if (not (empty? (get params "blogid")))
+                                    (Integer/parseInt (get params "blogid"))
+                                    nil)]
+                       (data/make-image (:filename image)
+                                        (get params "title")
+                                        (get params "description")
+                                        (:content-type image)
+                                        (:tempfile image)
+                                        blogid
+                                        (:id (data/get-current-user)))
                        (redirect-after-post templates/*image-url*))))
            (GET (str templates/*image-url* "/:imgid/:res") [imgid res :as request]
                (let [image (data/get-image-header (Integer/parseInt imgid) res)]
