@@ -24,58 +24,7 @@
        bash$ createdb smallblog
        bash$ psql smallblog -h localhost
        psql$
-       CREATE TABLE login (
-           id SERIAL,
-           email TEXT NOT NULL UNIQUE,
-           password TEXT NOT NULL,
-           PRIMARY KEY(id)
-       );
-       CREATE TABLE blog (
-           id SERIAL,
-           owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-           title TEXT NOT NULL,
-           created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-           PRIMARY KEY(id)
-       );
-       CREATE TABLE post (
-           id BIGSERIAL,
-           blogid int NOT NULL REFERENCES blog(id) ON DELETE CASCADE,
-           title TEXT NOT NULL,
-           content TEXT NOT NULL,
-           converted_content TEXT NOT NULL,
-           created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-           PRIMARY KEY(id)
-       );
 
-        CREATE TABLE s3reference (
-            id BIGSERIAL,
-            bucket TEXT NOT NULL,
-            filename TEXT NOT NULL,
-            contenttype TEXT NOT NULL,
-            md5hash TEXT NOT NULL,
-            owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-            PRIMARY KEY(id)
-        );
-        CREATE TABLE image (
-            id BIGSERIAL,
-            owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-            filename TEXT NOT NULL,
-            title TEXT,
-            description TEXT,
-            fullimage BIGINT REFERENCES s3reference,
-            blogwidthimage BIGINT REFERENCES s3reference,
-            thumbnail BIGINT REFERENCES s3reference,
-            created_date TIMESTAMP with time zone DEFAULT current_timestamp NOT NULL,
-            PRIMARY KEY(id)
-        );
-
-       CREATE TABLE domain (
-           id BIGSERIAL,
-           domain TEXT NOT NULL UNIQUE,
-           owner int NOT NULL REFERENCES login(id) ON DELETE CASCADE,
-           blogid int REFERENCES blog(id) ON DELETE SET NULL,
-           PRIMARY KEY(id)
-       );
 
 
        misc postgres notes
