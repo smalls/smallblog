@@ -15,7 +15,8 @@
                              [postgresql/postgresql "8.4-702.jdbc4"]
                              [net.java.dev.jets3t/jets3t "0.8.1"]]
             :dev-dependencies   [[vimclojure/server "2.2.0"]
-                                 [org.clojars.autre/lein-vimclojure "1.0.0"]]
+                                 [org.clojars.autre/lein-vimclojure "1.0.0"]
+                                 [drift "1.4.1"]]
             :run-aliases    {:server smallblog.core}
             :repositories   {"The Buzz Media Maven Repository" ; imgscalr
                              "http://maven.thebuzzmedia.com"})
