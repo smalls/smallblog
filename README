@@ -55,6 +55,17 @@ Or, from a REPL (this won't block):
 	(smallblog.core/start-server false)
 
 
+## Notes
+
+Some postgres commands:
+
+    to connect:
+    bash$ psql smallblog -h localhost
+
+    to describe a table:
+    psql> \d+ tablename
+
+
 ## License
 
 Copyright (C) 2011 Matt Small

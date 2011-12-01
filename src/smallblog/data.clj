@@ -19,17 +19,6 @@
              [org.jets3t.service.model S3Object]
              [org.jets3t.service.impl.rest.httpclient RestS3Service]))
 
-#_ (comment
-       postgres
-       bash$ createdb smallblog
-       bash$ psql smallblog -h localhost
-       psql$
-
-
-
-       misc postgres notes
-       ;to describe a table: psql$ \d+ tablename
-       )
 
 (defn get-current-user
     "gets the current user, or nil if none is defined"
