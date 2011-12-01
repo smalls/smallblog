@@ -327,19 +327,17 @@
     "returns some basic info about images with the specified offset for the
     current user.  If a blogid is specified, only return results with that blogid or null."
     ([userid number offset]
-         *db*
-         (sql/with-query-results
-             rs
-             ["select id, filename, title, description from image where owner=? order by created_date desc limit ? offset ?"
-              userid number offset]
-             (doall rs)))
+     (get-images userid nil number offset))
     ([userid blogid number offset]
      (sql/with-connection
          *db*
          (sql/with-query-results
              rs
-             ["select id, filename, title, description from image where owner=? and (blog=? or blog is null) order by created_date desc limit ? offset ?"
-              userid blogid number offset]
+             (if (nil? blogid)
+                 ["select id, filename, title, description from image where owner=? order by created_date desc limit ? offset ?"
+                  userid number offset]
+                 ["select id, filename, title, description from image where owner=? and (blog=? or blog is null) order by created_date desc limit ? offset ?"
+                  userid blogid number offset])
              (doall rs)))))
 
 (defn make-domain

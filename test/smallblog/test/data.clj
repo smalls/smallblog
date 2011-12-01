@@ -248,6 +248,7 @@
                      (sql/with-connection
                          *db*
                          (is (= 2 (count (data/get-images loginid 10 0))))
+                         (is (= 2 (count (data/get-images loginid nil 10 0))))
                          (is (= 2 (count (data/get-images loginid blogid 10 0))))
                          (is (= 1 (count (data/get-images loginid faux-blogid 10 0))))))
                  (finally (data/delete-login loginid)))))
