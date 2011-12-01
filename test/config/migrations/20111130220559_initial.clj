@@ -51,8 +51,7 @@
             [:id "BIGSERIAL" "PRIMARY KEY"]
             [:domain "TEXT" "NOT NULL UNIQUE"]
             [:owner "int" "NOT NULL REFERENCES login(id) ON DELETE CASCADE"]
-            [:blogid "int" "REFERENCES blog(id) ON DELETE SET NULL"])
-        )
+            [:blogid "int" "REFERENCES blog(id) ON DELETE SET NULL"]))
     (println "config.migrations.20111130220559-initial up done"))
   
 (defn down
@@ -66,6 +65,5 @@
         (sql/drop-table :s3reference)
         (sql/drop-table :post)
         (sql/drop-table :blog)
-        (sql/drop-table :login)
-        )
+        (sql/drop-table :login))
     (println "config.migrations.20111130220559-initial down done"))
