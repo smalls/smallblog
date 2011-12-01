@@ -224,6 +224,35 @@
                              (is (= "title" (:title (first images))))))
                      (finally (data/delete-login loginid))))))
 
+(deftest test-image-scoped-to-blog
+         "test that images can be scoped to a blog"
+         []
+         (let [loginid (data/make-login (str (now) "@test.com") "password")]
+             (try
+                 (let [blogid (:id (data/make-blog loginid "someblog"))
+                       faux-blogid (+ 1 blogid)
+                       imageid1 (sql/with-connection
+                                    *db*
+                                    (sql/insert-record :image {:filename "withblog"
+                                                              :title "title"
+                                                              :description "desc"
+                                                              :owner loginid
+                                                              :blog blogid}))
+                       imageid2 (sql/with-connection
+                                    *db*
+                                    (sql/insert-record :image {:filename "noblog"
+                                                              :title "title"
+                                                              :description "desc"
+                                                              :owner loginid
+                                                              :blog nil}))]
+                     (sql/with-connection
+                         *db*
+                         (is (= 2 (count (data/get-images loginid 10 0))))
+                         (is (= 2 (count (data/get-images loginid blogid 10 0))))
+                         (is (= 1 (count (data/get-images loginid faux-blogid 10 0))))))
+                 (finally (data/delete-login loginid)))))
+
+
 (deftest test-domains
          "test make-domain, get-domain, and get-user-domains"
          []
