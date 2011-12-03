@@ -105,14 +105,21 @@
     [blogid request page pagination]
     (data/get-posts blogid pagination (* page pagination)))
 
+(defn -get-page-from-req [request]
+    (let [req-params (:params request)]
+        (if (contains? req-params "page")
+            (Integer/parseInt (get req-params "page"))
+            0)))
+
+(defn -get-pagination-from-req [request]
+    (let [req-params (:params request)]
+        (if (contains? req-params "pagination")
+            (Integer/parseInt (get req-params "pagination"))
+            10)))
+
 (defn render-html-posts-helper [blogid request]
-    (let [req-params (:params request)
-          page (if (contains? req-params "page")
-                   (Integer/parseInt (get req-params "page"))
-                   0)
-          pagination (if (contains? req-params "pagination")
-                         (Integer/parseInt (get req-params "pagination"))
-                         10)]
+    (let [page (-get-page-from-req request)
+          pagination (-get-pagination-from-req request)]
         (render-html-posts
             (-get-posts-with-pagination blogid request page pagination)
             (util/uri-from-request request)
@@ -257,10 +264,11 @@
                (let [userid (:id (data/get-current-user))]
                    (json-response (render-blog-json
                                       (data/make-blog userid title)))))
-           (GET "/api/blog/:bid/post/" [bid]
-               (let [bid (Integer/parseInt bid)]
-                   ; XXX need to paginate the API
-                   (json-response (doall (for [post (data/get-posts bid 10 0)]
+           (GET "/api/blog/:bid/post/" [bid :as request]
+               (let [bid (Integer/parseInt bid)
+                     page (-get-page-from-req request)
+                     pagination (-get-pagination-from-req request)]
+                   (json-response (doall (for [post (data/get-posts bid pagination page)]
                                              (render-post-json post))))))
            (POST "/api/blog/:bid/post/" [bid title content]
                (if (not (allow-access? #{(keyword (str data/owner-blog-prefix bid))}
@@ -268,10 +276,16 @@
                    (redirect templates/*permission-denied-uri*)
                    (json-response (render-post-json
                                       (data/make-post (Integer/parseInt bid) title content)))))
-           (GET "/api/images/" []
-               (let [userid (:id (data/get-current-user))]
+           (GET "/api/images/" [:as request]
+                (let [req-params (:params request)
+                      blog (if (contains? req-params "blog")
+                               (Integer/parseInt (get req-params "blog"))
+                               nil)
+                      page (-get-page-from-req request)
+                      pagination (-get-pagination-from-req request)
+                      userid (:id (data/get-current-user))]
                    (json-response (render-json-images
-                                      (data/get-images userid 10 0)))))
+                                      (data/get-images userid blog pagination page)))))
            ; (GET "/api/post/:id" [id]
            ; 	(json-response (data/get-post id)))
            ; (PUT "/api/post/:id" [id]
