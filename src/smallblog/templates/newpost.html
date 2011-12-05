@@ -2,7 +2,9 @@
 <html>
 <head>
 	<meta charset="utf-8">
+
 	<title>blog name</title>
+	<meta name="blog" content="">
 
 	<link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection">
 	<link rel="stylesheet" href="/css/blueprint/print.css" type="text/css" media="print">
@@ -108,13 +110,19 @@
 		editor = new Markdown.Editor(converter);
 		editor.run();
 
+		var blogid=$('meta[name="blog"]')[0].content;
+		var images_url = '/api/images/'
+		if (blogid) {
+			images_url += '?blog='+blogid;
+		}
+
 		$('#image-dialog').dialog({
 			autoOpen: false,
 			modal: true,
 			width: 650,
 			height: 'auto',
 			open: function(event, ui) {
-				$.ajax({url: '/api/images/',
+				$.ajax({url: images_url,
 					success: populateImageSelector
 				});
 				$('#image-dialog').empty();

@@ -123,6 +123,8 @@
                   [ctx]
                   [:p#blogname] (html/content (:blogname ctx))
                   [:head :title] (html/content (:blogname ctx))
+                  [[:meta (html/attr= :name "blog")]] (html/set-attr
+                                                          :content (str (:blogid ctx)))
                   [:#menu] (html/content (user-menu ctx)))
 
 (html/deftemplate login "smallblog/templates/login.html"

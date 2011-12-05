@@ -49,8 +49,9 @@
                      :pagination pagination :page page
                      :total-posts (data/count-posts blogid)}))
 
-(defn render-html-newpost [blogname]
-    (templates/newpost {:blogname blogname
+(defn render-html-newpost [blogname blogid]
+    (println "blogid" blogid)
+    (templates/newpost {:blogname blogname :blogid (str blogid)
                         :user (data/get-current-user)}))
 
 (defn render-html-account [url]
@@ -222,7 +223,9 @@
            (GET "/blog/:bid/post/new" [bid]
                (if (not (data/blog-owner? bid))
                    (redirect templates/*permission-denied-uri*)
-                   (render-html-newpost (:title (data/get-blog (Integer/parseInt bid))))))
+                   (let [int-blogid (Integer/parseInt bid)]
+                       (render-html-newpost (:title (data/get-blog int-blogid))
+                                            int-blogid))))
            (POST "/blog/:bid/post/new" [bid title content :as request]
                (if (not (data/blog-owner? bid))
                    (redirect templates/*permission-denied-uri*)
