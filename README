@@ -13,8 +13,13 @@ Start by creating a database:
     bash$ createdb smallblog
 
 
-Copy src/smallblog/config.clj.template to src/smallblog/config.clj and change
-the parameters to match your system.
+You'll need to set several environment variables to configure your test system.
+I recommend copying env.sh.template to env.sh, and modifying its contents to
+fit your system and databaes configuration.  Source the file before starting
+the server:
+
+	bash$ . env.sh
+
 
 Once you've done that, you can create the db schema:
 
