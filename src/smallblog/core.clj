@@ -307,13 +307,9 @@
         (wrap-json-params)))
 
 (defn start-server [join]
-    (let [port (System/getenv "PORT")
-          port (if (nil? port) "3000" port)
-          port (Integer/parseInt port)
-          ssl-port templates/*https-port*]
-        (jetty/run-jetty (app port ssl-port)
-            {:join? join :port port :ssl-port ssl-port
-             :keystore "devonly.keystore" :key-password "foobar"})))
+    (jetty/run-jetty (app *port* *ssl-port*)
+                     {:join? join :port *port* :ssl-port *ssl-port*
+                      :keystore "devonly.keystore" :key-password "foobar"}))
 
 (defn -main []
     (start-server true))

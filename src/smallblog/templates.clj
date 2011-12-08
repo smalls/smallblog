@@ -1,28 +1,26 @@
 (ns smallblog.templates
     (:use [ring.util.codec :only (url-encode)]
-          [clojure.string :only (join)])
+          [clojure.string :only (join)]
+          [smallblog.config])
     (:require [net.cgrand.enlive-html :as html]
               [clj-time.core :as clj-time]
               [clj-time.format :as clj-time-format]
               [clj-time.coerce :as clj-time-coerce])
     (:import [org.mozilla.javascript Context ScriptableObject]))
 
-(def *https-port* 4330)
-(def *server* "localhost")
-
 ; when changing these, also check snippets.html and core/security-config
 (def *login-url* "/login")
-(def *login-fqurl* (str "https://" *server* ":" *https-port* *login-url*))
+(def *login-fqurl* (str "https://" *ssl-server* ":" *ssl-port* *login-url*))
 
 (def *signup-url* "/signup")
-(def *signup-fqurl* (str "https://" *server* ":" *https-port* *signup-url*))
+(def *signup-fqurl* (str "https://" *ssl-server* ":" *ssl-port* *signup-url*))
 
 (def *account-url* "/account")
-(def *account-fqurl* (str "https://" *server* ":" *https-port* *account-url*))
+(def *account-fqurl* (str "https://" *ssl-server* ":" *ssl-port* *account-url*))
 
 (def *login-redirect-url* "/login-redirect")
 (def *login-redirect-fqurl*
-    (str "https://localhost:" *https-port* *login-redirect-url*))
+    (str "https://localhost:" *ssl-port* *login-redirect-url*))
 (def *logout-url* "/logout")
 (def *permission-denied-uri* "/permission-denied")
 
