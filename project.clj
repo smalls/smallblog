@@ -13,10 +13,12 @@
                              [org.mindrot/jbcrypt "0.3m"]
                              [com.thebuzzmedia/imgscalr-lib "3.2"]
                              [postgresql/postgresql "8.4-702.jdbc4"]
-                             [net.java.dev.jets3t/jets3t "0.8.1"]]
+                             [net.java.dev.jets3t/jets3t "0.8.1"]
+                             [drift "1.4.1"]]
             :dev-dependencies   [[vimclojure/server "2.2.0"]
                                  [org.clojars.autre/lein-vimclojure "1.0.0"]
                                  [drift "1.4.1"]]
-            :run-aliases    {:server smallblog.core}
+            :run-aliases    {:server smallblog.core
+                             :migrate smallblog.dbmigrate}
             :repositories   {"The Buzz Media Maven Repository" ; imgscalr
                              "http://maven.thebuzzmedia.com"})
