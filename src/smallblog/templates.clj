@@ -52,14 +52,14 @@
                  "smallblog/templates/snippets.html"
                  [:#valid-user-menu]
                  [ctx]
-                 [:#accountlink] (html/set-attr :href *account-fqurl*))
+                 [:.accountlink] (html/set-attr :href *account-fqurl*))
 
 (html/defsnippet no-user-menu
                  "smallblog/templates/snippets.html"
                  [:#no-user-menu]
                  [ctx]
-                 [:#signuplink] (html/set-attr :href *signup-fqurl*)
-                 [:#loginlink] (html/set-attr :href
+                 [:.signuplink] (html/set-attr :href *signup-fqurl*)
+                 [:.loginlink] (html/set-attr :href
                                    (if (nil? (:url ctx))
                                        *login-fqurl*
                                        (str *login-fqurl* "?url=" (url-encode (:url ctx))))))
@@ -127,6 +127,7 @@
 
 (html/deftemplate login "smallblog/templates/login.html"
                   [ctx]
+                 [:.signuplink] (html/set-attr :href *signup-fqurl*)
                   [:#login_form] (html/set-attr :action
                                      (if (nil? (:url ctx))
                                          *login-redirect-fqurl*
