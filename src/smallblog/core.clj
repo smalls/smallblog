@@ -50,7 +50,6 @@
                      :total-posts (data/count-posts blogid)}))
 
 (defn render-html-newpost [blogname blogid]
-    (println "blogid" blogid)
     (templates/newpost {:blogname blogname :blogid (str blogid)
                         :user (data/get-current-user)}))
 
@@ -99,8 +98,12 @@
                 (redirect redirect-url)))))
 
 (defn ensure-secure [request]
-    (println "request" request)
-    (= :https (:scheme request)))
+    (or (= :https (:scheme request))
+        (let [headers (:headers request)
+              forwarded-header "x-forwarded-proto"]
+            (and (contains? headers forwarded-header)
+                 (= "https" (get headers forwarded-header))))))
+
 
 (defn -get-posts-with-pagination
     "obeys pagination when getting posts; reads pagination info from request"

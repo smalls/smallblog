@@ -204,3 +204,9 @@
                json-images (render-json-images images)]
              (is (= 1 (:id (first json-images))))
              (is (= 2 (:id (last json-images))))))
+
+(deftest test-ensure-https []
+         (is (ensure-secure {:scheme :https}))
+         (is (not (ensure-secure {:scheme :http})))
+         (is (ensure-secure {:scheme :http, :headers {"x-forwarded-proto" "https"}}))
+         (is (not (ensure-secure {:scheme :http, :headers {"x-forwarded-proto" "http"}}))))
