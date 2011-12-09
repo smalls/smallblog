@@ -99,6 +99,7 @@
                 (redirect redirect-url)))))
 
 (defn ensure-secure [request]
+    (println "request" request)
     (= :https (:scheme request)))
 
 (defn -get-posts-with-pagination
