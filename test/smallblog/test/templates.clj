@@ -54,5 +54,3 @@
 (deftest test-create-sslurl
          (is (= "https://af:8000/foo" (sslurl "af" "8000" "/foo")))
          (is (= "https://af/foo" (sslurl "af" "443" "/foo"))))
-
-(deftest test-pagination-calculation)

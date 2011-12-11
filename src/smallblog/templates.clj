@@ -10,7 +10,7 @@
 
 (defn sslurl
     "create an ssl url; url must start with a /"
-    ([url] (sslurl *ssl-server* *ssl-port*))
+    ([url] (sslurl *ssl-server* *ssl-port* url))
     ([server port url] (str "https://" server
                             (if (not (= "443" (str port)))
                                 (str ":" port))
