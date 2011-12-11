@@ -51,4 +51,8 @@
          (is (= "Page 1 of 2" (-pager-text 0 10 11)))
          (is (= "Page 2 of 2" (-pager-text 1 10 11))))
 
+(deftest test-create-sslurl
+         (is (= "https://af:8000/foo" (sslurl "af" "8000" "/foo")))
+         (is (= "https://af/foo" (sslurl "af" "443" "/foo"))))
+
 (deftest test-pagination-calculation)

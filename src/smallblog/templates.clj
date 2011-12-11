@@ -8,19 +8,26 @@
               [clj-time.coerce :as clj-time-coerce])
     (:import [org.mozilla.javascript Context ScriptableObject]))
 
+(defn sslurl
+    "create an ssl url; url must start with a /"
+    ([url] (sslurl *ssl-server* *ssl-port*))
+    ([server port url] (str "https://" server
+                            (if (not (= "443" (str port)))
+                                (str ":" port))
+                            url)))
+
 ; when changing these, also check snippets.html and core/security-config
 (def *login-url* "/login")
-(def *login-fqurl* (str "https://" *ssl-server* ":" *ssl-port* *login-url*))
+(def *login-fqurl* (sslurl *login-url*))
 
 (def *signup-url* "/signup")
-(def *signup-fqurl* (str "https://" *ssl-server* ":" *ssl-port* *signup-url*))
+(def *signup-fqurl* (sslurl *signup-url*))
 
 (def *account-url* "/account")
-(def *account-fqurl* (str "https://" *ssl-server* ":" *ssl-port* *account-url*))
+(def *account-fqurl* (sslurl *account-url*))
 
 (def *login-redirect-url* "/login-redirect")
-(def *login-redirect-fqurl*
-    (str "https://localhost:" *ssl-port* *login-redirect-url*))
+(def *login-redirect-fqurl* (sslurl *login-redirect-url*))
 (def *logout-url* "/logout")
 (def *permission-denied-uri* "/permission-denied")
 
@@ -127,7 +134,7 @@
 
 (html/deftemplate login "smallblog/templates/login.html"
                   [ctx]
-                 [:.signuplink] (html/set-attr :href *signup-fqurl*)
+                  [:.signuplink] (html/set-attr :href *signup-fqurl*)
                   [:#login_form] (html/set-attr :action
                                      (if (nil? (:url ctx))
                                          *login-redirect-fqurl*
