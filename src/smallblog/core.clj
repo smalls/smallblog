@@ -133,6 +133,14 @@
             page
             pagination)))
 
+(defn -get-newpost-date
+    "return a date if postdate is not nil or empty, or nil if it is"
+    [postdate]
+    (if (and (not (nil? postdate)) (not (empty? postdate)))
+        (clj-time-format/parse
+            (clj-time-format/formatters :date) postdate)
+        nil))
+    
 (defroutes main-routes
            (GET "/" [:as request]
                (let [server-name (str
@@ -230,12 +238,13 @@
                    (let [int-blogid (Integer/parseInt bid)]
                        (render-html-newpost (:title (data/get-blog int-blogid))
                                             int-blogid))))
-           (POST "/blog/:bid/post/new" [bid title content :as request]
+           (POST "/blog/:bid/post/new" [bid title content postdate :as request]
                (if (not (data/blog-owner? bid))
                    (redirect templates/*permission-denied-uri*)
                    (let [this-url (:uri request)
-                         to-url (subs this-url 0 (- (count this-url) 3))]
-                       (data/make-post (Integer/parseInt bid) title content)
+                         to-url (subs this-url 0 (- (count this-url) 3))
+                         postdate (-get-newpost-date postdate)]
+                       (data/make-post (Integer/parseInt bid) title content postdate)
                        (redirect-after-post to-url))))
 
 
@@ -282,7 +291,7 @@
                             (:roles (data/get-current-user))))
                    (redirect templates/*permission-denied-uri*)
                    (json-response (render-post-json
-                                      (data/make-post (Integer/parseInt bid) title content)))))
+                                      (data/make-post (Integer/parseInt bid) title content nil)))))
            (GET "/api/images/" [:as request]
                 (let [req-params (:params request)
                       blog (if (contains? req-params "blog")

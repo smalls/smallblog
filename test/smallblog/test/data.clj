@@ -101,7 +101,7 @@
                loginid (data/make-login (str (now) "@test.com") "password")
                blogid (:id (data/make-blog loginid "blogname"))]
              (try
-                 (let [new-row (data/make-post blogid "text" content)]
+                 (let [new-row (data/make-post blogid "text" content nil)]
                      (is (= expected-markdown-content
                              (subs (:converted_content new-row) 0
                                  (count expected-markdown-content))))
@@ -120,7 +120,7 @@
          (let [loginid (data/make-login (str (now) "@test.com") "password")]
              (try
                  (let [blogid (:id (data/make-blog loginid "blogname"))
-                       postid (:id (data/make-post blogid "title" "content"))]
+                       postid (:id (data/make-post blogid "title" "content" nil))]
                      (data/delete-blog blogid)
                      (sql/with-connection *db*
                          (sql/with-query-results rs
@@ -137,9 +137,9 @@
                loginid (data/make-login (str (now) "@test.com") "password")
                blogid (:id (data/make-blog loginid "blogname"))]
              (try
-                 (data/make-post blogid "title" content1)
-                 (data/make-post blogid "title" content2)
-                 (data/make-post blogid "title" content3)
+                 (data/make-post blogid "title" content1 nil)
+                 (data/make-post blogid "title" content2 nil)
+                 (data/make-post blogid "title" content3 nil)
                  (is (= 3 (data/count-posts blogid)))
                  (let [result (data/get-posts blogid 1 0)]
                      (is (= 1 (count result)))

@@ -36,6 +36,16 @@
 			<input type="text" name="title" class="textinput-14">
 			<textarea class="wmd-input" name="content" id="wmd-input"
 					class="textinput-14"></textarea>
+			<div class="span-14 last">
+				<!-- XXX should be validated -->
+				<label for="humandate">post date</label>
+				<input type="text" id="humandate">
+				<input type="hidden" name="postdate" id="postdate">
+				<!--
+				<label for="timepick" style="padding-left: 20px">post time</label>
+				<input type="text" name="time" id="timepick">
+				-->
+			</div>
 
 			<div class="span-14 last">
 				<button id="imagebtn" type="button">image</button>
@@ -133,6 +143,14 @@
 		$("input:submit, button").button();
 		$('#imagebtn').click(function(evt){
 			$('#image-dialog').dialog('open');
+		});
+
+		$('#humandate').datepicker({
+			showButtonPanel: true,
+			dateFormat: 'MM dd, yy',
+			altField: '#postdate',
+			altFormat: 'yy-mm-dd',
+			maxDate: 0
 		});
 	});
 </script> 

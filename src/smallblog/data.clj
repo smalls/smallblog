@@ -165,11 +165,16 @@
 
 (defn make-post
     "create a post, retrieve the newly inserted post"
-    [blogid title content]
-    (sql/with-connection *db*
-        (sql/insert-record :post
-                     {:title title :content content :blogid blogid
-                      :converted_content (markdownify content)})))
+    [blogid title content created-date]
+    (let [row {:title title :blogid blogid
+               :content content
+               :converted_content (markdownify content)}
+          row (if (not (nil? created-date))
+                  (assoc row :created_date created-date)
+                  row)]
+        (sql/with-connection
+            *db*
+            (sql/insert-record :post row))))
 
 (defn get-content-type
     "get the image content type and format; map gif to png, otherwise make a

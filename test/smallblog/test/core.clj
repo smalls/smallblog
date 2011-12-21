@@ -210,3 +210,11 @@
          (is (not (ensure-secure {:scheme :http})))
          (is (ensure-secure {:scheme :http, :headers {"x-forwarded-proto" "https"}}))
          (is (not (ensure-secure {:scheme :http, :headers {"x-forwarded-proto" "http"}}))))
+
+(deftest test-get-newpost-date []
+         (is (nil? (-get-newpost-date "")))
+         (is (nil? (-get-newpost-date nil)))
+         (let [old-date (-get-newpost-date "2011-12-20")]
+             (is (= 20 (.getDayOfMonth old-date)))
+             (is (= 12 (.getMonthOfYear old-date)))
+             (is (= 2011 (.getYear old-date)))))
