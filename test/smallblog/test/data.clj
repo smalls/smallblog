@@ -5,7 +5,7 @@
           [clojure.test]
           [sandbar.auth :only (*sandbar-current-user*)]
           [sandbar.stateful-session :only (sandbar-session)]
-          [clj-time.core :only (now)])
+          [clj-time.core :only (now date-time from-time-zone time-zone-for-offset after?)])
     (:require [smallblog.data :as data]
               [clojure.java.jdbc :as sql])
     (:import [java.io File FileNotFoundException]))
@@ -64,7 +64,6 @@
                  (is (not (nil? (data/get-login login "foo"))))
                  (finally (data/delete-login loginid)))))
 
-
 (deftest test-role-keywords
          "test the -role-keywords method"
          []
@@ -92,7 +91,7 @@
                      (is (= "bar" (:title (last blogs)))))
                  (finally (data/delete-login loginid)))))
 
-(deftest post
+(deftest test-post
          "test basic creation of posts - including (make-post), (get-posts 1 0),
          (get-post id), and (count-posts)"
          []
@@ -113,6 +112,27 @@
                      (let [single-result (data/get-post blogid (:id (first result)))]
                          (is (= (get (first result) :content)
                                  (get single-result :content)))))
+                 (finally (data/delete-login loginid)))))
+
+(deftest test-post-with-time
+         "test creating posts for set times"
+         []
+         (let [loginid (data/make-login (str (now) "@test.com") "password")
+               blogid (:id (data/make-blog loginid "blogname"))]
+             (try
+                 (let [old-dt (date-time 1990 12 20)
+                       older-dt (from-time-zone (date-time 1990 12 20)
+                                                (time-zone-for-offset 2))
+                       old-content "old"
+                       older-content "older"
+                       old-row (data/make-post blogid "old" old-content old-dt)
+                       older-row (data/make-post blogid "old" older-content older-dt)
+                       result (data/get-posts blogid 3 0)]
+                     (is (after? old-dt older-dt)
+                         "this should have failed")
+                     (is (= 2 (count result)))
+                     (is (= old-content (:content (first result))))
+                     (is (= older-content (:content (last result)))))
                  (finally (data/delete-login loginid)))))
 
 (deftest post-cascade-delete
@@ -252,7 +272,6 @@
                          (is (= 2 (count (data/get-images loginid blogid 10 0))))
                          (is (= 1 (count (data/get-images loginid faux-blogid 10 0))))))
                  (finally (data/delete-login loginid)))))
-
 
 (deftest test-domains
          "test make-domain, get-domain, and get-user-domains"

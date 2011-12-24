@@ -7,12 +7,15 @@
           [sandbar.stateful-session :only (session-put!)]
           [ring.util.mime-type :only (default-mime-types)])
     (:require [clojure.java.jdbc :as sql]
-              [clojure.string :as str])
-    (:import [java.io File]
-             [org.mindrot.jbcrypt BCrypt]
-             [java.io ByteArrayInputStream ByteArrayOutputStream FileInputStream]
+              [clojure.java.jdbc.internal :as sql-int]
+              [clojure.string :as str]
+              [clj-time.format :as clj-time-format])
+    (:import [java.util Calendar]
+             [java.io File ByteArrayInputStream ByteArrayOutputStream FileInputStream]
+             [java.sql.Timestamp]
              [javax.imageio ImageIO]
              [java.awt.image BufferedImageOp]
+             [org.mindrot.jbcrypt BCrypt]
              [com.thebuzzmedia.imgscalr Scalr]
              [org.jets3t.service.security AWSCredentials]
              [org.jets3t.service.utils ServiceUtils]
@@ -164,18 +167,27 @@
             (doall rs))))
 
 (defn make-post
-    "create a post, retrieve the newly inserted post"
+    "create a post, retrieve the newly inserted post (the entire row)"
     [blogid title content created-date]
-    (let [row {:title title :blogid blogid
-               :content content
-               :converted_content (markdownify content)}
-          row (if (not (nil? created-date))
-                  (assoc row :created_date created-date)
-                  row)]
+    (let [with-date (not (nil? created-date))
+          sql (if with-date
+                  "INSERT INTO post (blogid, title, content, converted_content, created_date) VALUES (?, ?, ?, ?, ?)"
+                  "INSERT INTO post (blogid, title, content, converted_content) VALUES (?, ?, ?, ?)")]
         (sql/with-connection
             *db*
-            (sql/insert-record :post row))))
-
+            (let [stmt (sql/prepare-statement (sql/connection) sql :return-keys true)]
+                (.setObject stmt 1 blogid)
+                (.setObject stmt 2 title)
+                (.setObject stmt 3 content)
+                (.setObject stmt 4 (markdownify content))
+                (if with-date
+                    (.setTimestamp stmt 5
+                                   (java.sql.Timestamp. (.getMillis created-date))
+                                   (Calendar/getInstance
+                                       (.toTimeZone (.getZone created-date)))))
+                (.execute stmt)
+                (first (sql-int/resultset-seq* (.getGeneratedKeys stmt)))))))
+                    
 (defn get-content-type
     "get the image content type and format; map gif to png, otherwise make a
     best effort to match the type"
