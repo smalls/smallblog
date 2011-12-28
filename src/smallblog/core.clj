@@ -215,8 +215,8 @@
                         (or
                             (nil? *signup-token*)
                             (= token *signup-token*)))
-                   (render-html-signup)
-                   {:status 403}))
+                    (render-html-signup)
+                    (templates/signup-restricted)))
            (POST templates/*signup-url* [email newpw confirmpw :as request]
                (if (not (ensure-secure request))
                    {:status 403}

@@ -145,6 +145,15 @@
 (html/deftemplate about "smallblog/templates/about.html" [])
 
 
+(html/defsnippet signup-restricted-snippet
+                 "smallblog/templates/snippets.html"
+                 [:#signup-restricted]
+                 [])
+
+(html/deftemplate signup-restricted "smallblog/templates/contact.html" []
+                  [:#contact-admin] (html/before (signup-restricted-snippet)))
+
+
 (defn -domains-for-blog [blogid domains]
     (filter #(= blogid (:blogid %)) domains))
 
