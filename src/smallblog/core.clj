@@ -280,6 +280,8 @@
                 (templates/contact))
            (POST "/contact" [:as request]
                  "XXX not yet done")
+           (GET "/about" []
+                (templates/about))
 
 
            ; "api urls"

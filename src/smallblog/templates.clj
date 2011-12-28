@@ -140,6 +140,11 @@
                                          *login-redirect-fqurl*
                                          (str *login-redirect-fqurl* "?url=" (url-encode(:url ctx))))))
 
+(html/deftemplate contact "smallblog/templates/contact.html" [])
+
+(html/deftemplate about "smallblog/templates/about.html" [])
+
+
 (defn -domains-for-blog [blogid domains]
     (filter #(= blogid (:blogid %)) domains))
 
