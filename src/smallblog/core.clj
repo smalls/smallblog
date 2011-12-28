@@ -20,10 +20,6 @@
               [clj-time.coerce :as clj-time-coerce]
               [clj-json.core :as json]))
 
-
-(defn index-page []
-    (str "hi hi hi <a href=\"http://localhost:3000/blog/67/post/\">link</a>"))
-
 (defn json-response [data & [status]]
     {:status (or status 200)
      :headers {"Content-Type" "application/json"}
@@ -151,7 +147,7 @@
                    (let [domain (data/get-domain server-name)]
                        (if (not (nil? domain))
                            (render-html-posts-helper (:blogid domain) request)
-                           (index-page)))))
+                           (templates/about)))))
 
            ; "account urls"
            (GET templates/*permission-denied-uri* [] (permission-denied))
