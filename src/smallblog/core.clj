@@ -275,6 +275,13 @@
                                       (:remote-filename image))))))
 
 
+           ; contact/about
+           (GET "/contact" []
+                (templates/contact))
+           (POST "/contact" [:as request]
+                 "XXX not yet done")
+
+
            ; "api urls"
            (POST "/api/blog/" [title]
                (let [userid (:id (data/get-current-user))]
