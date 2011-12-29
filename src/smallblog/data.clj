@@ -5,7 +5,8 @@
           [clojure.contrib.string :only (split)]
           [sandbar.auth :only (current-user *sandbar-current-user* allow-access?)]
           [sandbar.stateful-session :only (session-put!)]
-          [ring.util.mime-type :only (default-mime-types)])
+          [ring.util.mime-type :only (default-mime-types)]
+          [postal.core :only (send-message)])
     (:require [clojure.java.jdbc :as sql]
               [clojure.java.jdbc.internal :as sql-int]
               [clojure.string :as str]
@@ -382,3 +383,18 @@
     (sql/with-connection *db*
         (sql/update-values :domain ["id=? and owner=?" domainid userid]
             {:blogid blogid})))
+
+(defn send-email
+    "send an email using the smtp server from config.clj"
+    [from-address to-address subject body]
+    (let [result (send-message #^{:host *smtp-host*
+                                  :ssl :true
+                                  :user *smtp-user*
+                                  :pass *smtp-password*}
+                               {:from from-address
+                                :to to-address
+                                :subject subject
+                                :body body})]
+        (if (not (= :SUCCESS (:error result)))
+            (throw (Exception. (str "failed sending email: " result)))
+            true)))

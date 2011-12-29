@@ -275,7 +275,19 @@
            (GET "/contact" []
                 (templates/contact))
            (POST "/contact" [:as request]
-                 "XXX not yet done")
+                (let [params (:params request)
+                      email (get params "email")
+                      confirm-email (get params "confirmemail")
+                      subject (get params "subject")
+                      body (get params "body")
+                      admin-email *admin-email*]
+                    (if (not (= email confirm-email))
+                        (throw (Exception. (str "email addresses must match: " email " and "
+                                                confirm-email))))
+                    (if (or (empty? email) (empty? subject) (empty? body))
+                        (throw (Exception. (str "all fields must be filled in"))))
+                    (data/send-email email admin-email subject body)
+                    (redirect-after-post "/")))
            (GET "/about" []
                 (templates/about))
 

@@ -30,3 +30,9 @@
 ; if not nil, the signup page url requires a get parameter with the key 'token',
 ; value the value of *signup-token*.  Read from SIGNUP_TOKEN
 (def *signup-token* (-get-from-env "SIGNUP_TOKEN"))
+
+; sending email, admin contact, etc.
+(def *admin-email* (-get-from-env "ADMIN_EMAIL"))
+(def *smtp-host* (-get-from-env "SMTP_HOST" "smtp.sendgrid.net"))
+(def *smtp-user* (-get-from-env "SENDGRID_USERNAME" (-get-from-env "SMTP_USERNAME")))
+(def *smtp-password* (-get-from-env "SENDGRID_PASSWORD" (-get-from-env "SMTP_PASSWORD")))
