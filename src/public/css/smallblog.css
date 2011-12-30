@@ -13,3 +13,10 @@ td.img-select-thumb-td {width: 175px;}
 td.img-select-button-td {width: 125px;}
 
 table.smalltable {border-collapse: collapse}
+
+div.menu {margin-bottom: 5px}
+div.nested-menu {float: right}
+
+div.postdate {font-size: .8em; line-height: .8em;}
+h3.posttitle {margin-top: 1em; margin-bottom: 0px;}
+div.nested-newpost {float: right;}

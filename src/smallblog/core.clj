@@ -159,7 +159,7 @@
                        (html-response
                            (if (not (nil? domain))
                                (render-html-posts-helper (:blogid domain) request)
-                               (templates/about))))))
+                               (templates/about {:user (data/get-current-user)}))))))
 
            ; "account urls"
            (GET templates/*permission-denied-uri* [] (html-response (permission-denied)))
@@ -288,7 +288,7 @@
 
            ; contact/about
            (GET "/contact" []
-                (html-response (templates/contact)))
+                (html-response (templates/contact {:user (data/get-current-user)})))
            (POST "/contact" [:as request]
                 (let [params (:params request)
                       email (get params "email")
@@ -304,7 +304,7 @@
                     (data/send-email email admin-email subject body)
                     (redirect-after-post "/")))
            (GET "/about" []
-                (html-response (templates/about)))
+                (html-response (templates/about {:user (data/get-current-user)})))
 
 
            ; "api urls"

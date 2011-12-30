@@ -37,7 +37,7 @@
 (def *image-thumb* "thumb")
 
 
-(def date-output-format (clj-time-format/formatter "dd MMM yyyy HH:mm"))
+(def date-output-format (clj-time-format/formatter "dd MMM yyyy"))
 
 (defn markdownify [post]
     (let [cx (Context/enter)
@@ -78,7 +78,7 @@
 
 (html/defsnippet new-post-button-snippet
                  "smallblog/templates/snippets.html"
-                 [:#newpost]
+                 [:#nested-newpost]
                  [ctx])
 
 (defn new-post-button [ctx]
@@ -105,7 +105,7 @@
     (= page (-number-of-pages pagination total-posts)))
 
 (defn -pager-text [page pagination total-posts]
-    (str "Page " (+ 1 page) " of " (+ 1 (-number-of-pages pagination total-posts))))
+    (str "page " (+ 1 page) " of " (+ 1 (-number-of-pages pagination total-posts))))
 
 (html/deftemplate main "smallblog/templates/main.html"
                   [ctx]
@@ -140,9 +140,11 @@
                                          *login-redirect-fqurl*
                                          (str *login-redirect-fqurl* "?url=" (url-encode(:url ctx))))))
 
-(html/deftemplate contact "smallblog/templates/contact.html" [])
+(html/deftemplate contact "smallblog/templates/contact.html" [ctx]
+                  [:#menu] (html/content (user-menu ctx)))
 
-(html/deftemplate about "smallblog/templates/about.html" [])
+(html/deftemplate about "smallblog/templates/about.html" [ctx]
+                  [:#menu] (html/content (user-menu ctx)))
 
 
 (html/defsnippet signup-restricted-snippet
