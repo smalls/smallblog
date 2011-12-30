@@ -20,10 +20,21 @@
               [clj-time.coerce :as clj-time-coerce]
               [clj-json.core :as json]))
 
-(defn json-response [data & [status]]
+(defn json-response
+    "called on all JSON responses to set content-type, status, render as json -
+    should be ring middleware?"
+    [data & [status]]
     {:status (or status 200)
-     :headers {"Content-Type" "application/json"}
+     :headers {"Content-Type" "application/json;charset=utf-8"}
      :body (json/generate-string data)})
+
+(defn html-response
+    "called on all HTML responses to set content-type, status, etc -
+    should be ring middleware?"
+    [data & [status]]
+    {:status (or status 200)
+     :headers {"Content-Type" "text/html;charset=utf-8"}
+     :body data})
 
 (defn render-post-json [post]
     {:id (:id post), :title (:title post), :content (:content post),
@@ -145,17 +156,18 @@
                                          (str ":" (:server-port request))))
                      uri (:uri request)]
                    (let [domain (data/get-domain server-name)]
-                       (if (not (nil? domain))
-                           (render-html-posts-helper (:blogid domain) request)
-                           (templates/about)))))
+                       (html-response
+                           (if (not (nil? domain))
+                               (render-html-posts-helper (:blogid domain) request)
+                               (templates/about))))))
 
            ; "account urls"
-           (GET templates/*permission-denied-uri* [] (permission-denied))
+           (GET templates/*permission-denied-uri* [] (html-response (permission-denied)))
            (GET templates/*logout-url* [] (logout! {}))
            (GET templates/*login-url* [url :as request]
                (if (not (ensure-secure request))
                    {:status 403}
-                   (templates/login {:url url})))
+                   (html-response (templates/login {:url url}))))
            (POST templates/*login-redirect-url* [url :as request]
                (if (not (ensure-secure request))
                    {:status 403}
@@ -165,7 +177,7 @@
            (GET templates/*account-url* [:as request]
                (if (not (ensure-secure request))
                    {:status 403}
-                   (render-html-account (util/uri-from-request request))))
+                   (html-response (render-html-account (util/uri-from-request request)))))
            (POST templates/*account-url* [:as request]
                (if (not (ensure-secure request))
                    {:status 403}
@@ -210,13 +222,14 @@
                                      (println "XXX should be a log not a print" request)
                                      {:status 400 :body "bad form parameters"})))))
            (GET templates/*signup-url* [token :as request]
-                (if (and
-                        (ensure-secure request)
-                        (or
-                            (nil? *signup-token*)
-                            (= token *signup-token*)))
-                    (render-html-signup)
-                    (templates/signup-restricted)))
+                (html-response
+                    (if (and
+                            (ensure-secure request)
+                            (or
+                                (nil? *signup-token*)
+                                (= token *signup-token*)))
+                        (render-html-signup)
+                        (templates/signup-restricted))))
            (POST templates/*signup-url* [email newpw confirmpw :as request]
                (if (not (ensure-secure request))
                    {:status 403}
@@ -227,13 +240,15 @@
 
            ; "post urls"
            (GET "/blog/:blogid/post/" [blogid :as request]
-               (render-html-posts-helper (Integer/parseInt blogid) request))
+               (html-response (render-html-posts-helper (Integer/parseInt blogid) request)))
            (GET "/blog/:bid/post/new" [bid]
                (if (not (data/blog-owner? bid))
                    (redirect templates/*permission-denied-uri*)
                    (let [int-blogid (Integer/parseInt bid)]
-                       (render-html-newpost (:title (data/get-blog int-blogid))
-                                            int-blogid))))
+                       (html-response
+                           (render-html-newpost
+                               (:title (data/get-blog int-blogid))
+                               int-blogid)))))
            (POST "/blog/:bid/post/new" [bid title content postdate :as request]
                (if (not (data/blog-owner? bid))
                    (redirect templates/*permission-denied-uri*)
@@ -246,8 +261,8 @@
 
            ; "image urls"
            (GET templates/*image-url* []
-               (render-html-images (data/get-images
-                                       (:id (data/get-current-user)) 10 0)))
+               (html-response (render-html-images (data/get-images
+                                                      (:id (data/get-current-user)) 10 0))))
            (wrap-multipart-params
                (POST templates/*image-url* {params :params}
                    (let [image (get params "image")
@@ -273,7 +288,7 @@
 
            ; contact/about
            (GET "/contact" []
-                (templates/contact))
+                (html-response (templates/contact)))
            (POST "/contact" [:as request]
                 (let [params (:params request)
                       email (get params "email")
@@ -289,7 +304,7 @@
                     (data/send-email email admin-email subject body)
                     (redirect-after-post "/")))
            (GET "/about" []
-                (templates/about))
+                (html-response (templates/about)))
 
 
            ; "api urls"
