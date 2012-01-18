@@ -24,6 +24,16 @@
              [org.jets3t.service.impl.rest.httpclient RestS3Service]))
 
 
+(defn get-db-version
+    "gets the current db migration version"
+    []
+    (sql/with-connection
+        *db*
+        (sql/with-query-results
+            rs
+            ["select version from migration_version order by version desc"]
+            (:version (first rs)))))
+
 (defn get-current-user
     "gets the current user, or nil if none is defined"
     []

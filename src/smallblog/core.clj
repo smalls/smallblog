@@ -20,6 +20,17 @@
               [clj-time.coerce :as clj-time-coerce]
               [clj-json.core :as json]))
 
+(defn verify-version
+    "throws an exception if the version is incorrect or doesn't match"
+    ([] (verify-version 20111130225420))
+    ([expected-version]
+     (let [version (data/get-db-version)]
+         (if (= expected-version version)
+             version
+             (throw (Exception.
+                        (str "unexpected version '" version
+                             "', expected '" expected-version)))))))
+
 (defn json-response
     "called on all JSON responses to set content-type, status, render as json -
     should be ring middleware?"
@@ -352,6 +363,7 @@
         (wrap-json-params)))
 
 (defn start-server [join]
+    (verify-version)
     (jetty/run-jetty (app *port* *ssl-port*)
                      {:join? join :port *port* :ssl-port *ssl-port*
                       :keystore "devonly.keystore" :key-password "foobar"}))

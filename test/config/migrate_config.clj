@@ -1,5 +1,6 @@
 (ns config.migrate-config
-    (:use [smallblog.config])
+    (:use [smallblog.config]
+          [smallblog.data :only [get-db-version]])
     (:require [clojure.java.jdbc :as sql]))
 
 (defn version-table-exists? []
@@ -13,10 +14,7 @@
             (not (empty? rs)))))
 
 (defn get-current-version []
-    (sql/with-connection
-        *db*
-        (sql/with-query-results rs ["select version from migration_version order by version desc"]
-                                (:version (first rs)))))
+    (get-db-version))
 
 (defn current-db-version []
     (if (not (version-table-exists?))

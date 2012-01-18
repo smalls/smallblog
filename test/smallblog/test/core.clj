@@ -218,3 +218,9 @@
              (is (= 20 (.getDayOfMonth old-date)))
              (is (= 12 (.getMonthOfYear old-date)))
              (is (= 2011 (.getYear old-date)))))
+
+(deftest test-verify-version []
+         (let [current-version (data/get-db-version)]
+             (is (= current-version (verify-version current-version))))
+         (is (thrown-with-msg? Exception #"unexpected version"
+                                   (verify-version "some other version"))))
