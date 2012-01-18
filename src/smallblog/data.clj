@@ -157,11 +157,26 @@
         (sql/delete-rows :blog ["id=?" id])))
 
 
-(defn get-post [blogid id]
-    (sql/with-connection *db*
-        (sql/with-query-results rs
-            ["select * from post where blogid=? and id=?" (int blogid) id]
-            (first rs))))
+(defn get-post
+    ([blogid id]
+     (sql/with-connection
+         *db*
+         (sql/with-query-results
+             rs
+             ["select * from post where blogid=? and id=?" (int blogid) id]
+             (first rs))))
+    ([blogid title year month]
+     (sql/with-connection
+         *db*
+         (sql/with-query-results
+             rs
+             [(str "select * from post where blogid=? and title=? and "
+                   "extract(year from created_date)=? and "
+                   "extract(month from created_date)=?")
+              (int blogid) title year month]
+             (first rs)))))
+
+
 
 (defn count-posts [blogid]
     (sql/with-connection *db*

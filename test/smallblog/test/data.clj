@@ -135,6 +135,20 @@
                      (is (= older-content (:content (last result)))))
                  (finally (data/delete-login loginid)))))
 
+(deftest test-get-post-by-title-year-month
+         "test that we can get individual posts by their info"
+         []
+         (let [loginid (data/make-login (str (now) "@test.com") "password")]
+             (try
+                 (let [blogid (:id (data/make-blog loginid "someblog"))
+                       old-dt (date-time 1990 12 20)
+                       old-row (data/make-post blogid "old" "oldest" old-dt)
+                       other-dt (date-time 1991 6 20)
+                       other-row (data/make-post blogid "old" "other" other-dt)]
+                     (is (= (:id old-row) (:id (data/get-post blogid "old" 1990 12))))
+                     (is (= (:id other-row) (:id (data/get-post blogid "old" 1991 6)))))
+                 (finally (data/delete-login loginid)))))
+
 (deftest post-cascade-delete
          "test that the cascade delete removes nested posts when deleting a blog"
          (let [loginid (data/make-login (str (now) "@test.com") "password")]
