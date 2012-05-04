@@ -47,10 +47,18 @@
          (is (= true (-is-last-page? 1 10 11))))
 
 (deftest test-pager-text
-         (is (= "Page 1 of 1" (-pager-text 0 10 0)))
-         (is (= "Page 1 of 2" (-pager-text 0 10 11)))
-         (is (= "Page 2 of 2" (-pager-text 1 10 11))))
+         (is (= "page 1 of 1" (-pager-text 0 10 0)))
+         (is (= "page 1 of 2" (-pager-text 0 10 11)))
+         (is (= "page 2 of 2" (-pager-text 1 10 11))))
 
 (deftest test-create-sslurl
          (is (= "https://af:8000/foo" (sslurl "af" "8000" "/foo")))
          (is (= "https://af/foo" (sslurl "af" "443" "/foo"))))
+
+(deftest test-permalink-url []
+         (let [post {:title "title", :text "text",
+                     :created_date (java.sql.Timestamp.
+                                       (.getMillis (date-time 2011 8 2 3 4 5 6)))}
+               ctx {:url "http://foo/bar/"}
+               url (-permalink-url ctx post)]
+             (is (= (str (:url ctx) "2011/8/title") url))))

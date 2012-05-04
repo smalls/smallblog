@@ -86,6 +86,13 @@
         (html/content (new-post-button-snippet ctx))
         nil))
 
+(defn -permalink-url [ctx item]
+    (let [cdate (clj-time-coerce/from-date (:created_date item))
+          timestamp (:created_date item)
+          month (+ 1 (.getMonth timestamp))
+          year (.getYear timestamp)]
+        (str (:url ctx) year "/" month "/" (:title item))))
+
 (defn -main-div-post [ctx]
     (html/clone-for [item (:posts ctx)]
                     [:.posttitle] (html/content (:title item))
@@ -93,7 +100,9 @@
                                      (clj-time-format/unparse
                                          date-output-format
                                          (clj-time-coerce/from-date (:created_date item))))
-                    [:.postbody] (html/html-content (:converted_content item))))
+                    [:.postbody] (html/html-content (:converted_content item))
+                    [:.permalink] (html/set-attr :href (-permalink-url ctx item))
+                    [:.permalink] (html/content (-permalink-url ctx item))))
 
 (defn -is-first-page? [page pagination total-posts]
     (= 0 page))
