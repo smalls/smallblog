@@ -170,10 +170,11 @@
          *db*
          (sql/with-query-results
              rs
-             [(str "select * from post where blogid=? and title=? and "
-                   "extract(year from created_date)=? and "
-                   "extract(month from created_date)=?")
-              (int blogid) title year month]
+             [(str "select * from post where blogid=? and title=?"
+                   " and extract(year from created_date)=?"
+                   " and extract(month from created_date)=?"
+                   )
+              blogid title year month] (comment title year month) ;]
              (first rs)))))
 
 

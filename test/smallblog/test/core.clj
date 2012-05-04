@@ -3,7 +3,7 @@
         [clojure.test]
         [clojure.string :only (join)]
         [clojure.contrib.string :only (substring?)]
-        [clj-time.core :only (now date-time)]
+        [clj-time.core :only (now date-time year month)]
         [sandbar.auth :only (*sandbar-current-user*)])
     (:require	[clj-json.core :as json]
         [smallblog.data :as data]
@@ -80,10 +80,15 @@
              (is (= "20110802T030405.006Z"
                     (:created_date (render-post-json post))))))
 
-(deftest test-get-html-posts []
+(deftest test-get-html-posts
+         "test getting html posts - the regular url, an explicit path, domain, and
+         explicit path via domain"
+         []
          (with-login-and-blog-id
              (fn [loginid, blogid]
-                 (let [content (str "some new content" (now)) title (str "new title " (now))
+                 (let [now (now)
+                       content (str "some new content" now)
+                       title "newtitle"
                        response-post (request-post
                                          :http (str "/api/blog/" blogid "/post/")
                                          main-routes {:title title :content content})
@@ -95,7 +100,18 @@
                      (is (substring? "<html" response-body))
                      (is (substring? "div class=\"container" response-body))
                      (is (substring? title response-body))
-                     (is (substring? content response-body))))))
+                     (is (substring? content response-body))
+                     (let [specific-post-url (str "/blog/" blogid "/post/" (year now) "/"
+                                         (month now) "/" title)
+                           response-specific-post (request-get :http specific-post-url
+                                                               main-routes)
+                           response-specific-post-dne (request-get
+                                                          :http (str specific-post-url "2")
+                                                          main-routes)
+                           response-specific-post-body (join (:body response-specific-post))]
+                         (is (= 200 (:status response-specific-post)))
+                         (is (substring? content response-specific-post-body))
+                         (is (= 404 (:status response-specific-post-dne))))))))
 
 (deftest test-get-markdownified-html-posts
          "test making markdowny posts through the API and through the regular flow"

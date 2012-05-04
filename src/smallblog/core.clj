@@ -92,6 +92,10 @@
 
 
 
+; -----------------------------------------
+;  auth & security
+;
+
 (defn permission-denied []
     (str "permission denied page"))
 
@@ -123,11 +127,9 @@
                  (= "https" (get headers forwarded-header))))))
 
 
-(defn -get-posts-with-pagination
-    "obeys pagination when getting posts; reads pagination info from request"
-    [blogid request page pagination]
-    (data/get-posts blogid pagination (* page pagination)))
-
+; -----------------------------------------
+;  post pages - rendering w/ pagination
+;
 (defn -get-page-from-req [request]
     (let [req-params (:params request)]
         (if (contains? req-params "page")
@@ -140,16 +142,24 @@
             (Integer/parseInt (get req-params "pagination"))
             10)))
 
-(defn render-html-posts-helper [blogid request]
+(defn -render-html-posts-helper
+    [blogid request posts page pagination]
+    (render-html-posts
+        posts
+        (util/uri-from-request request)
+        (:title (data/get-blog blogid))
+        blogid
+        page
+        pagination))
+
+(defn render-html-posts-paginator
+    [blogid request]
+    "paginate a request for posts based on request parameters"
     (let [page (-get-page-from-req request)
           pagination (-get-pagination-from-req request)]
-        (render-html-posts
-            (-get-posts-with-pagination blogid request page pagination)
-            (util/uri-from-request request)
-            (:title (data/get-blog blogid))
-            blogid
-            page
-            pagination)))
+        (-render-html-posts-helper blogid request
+                                   (data/get-posts blogid pagination (* page pagination))
+                                   page pagination)))
 
 (defn -get-newpost-date
     "return a date if postdate is not nil or empty, or nil if it is"
@@ -158,19 +168,27 @@
         (clj-time-format/parse
             (clj-time-format/formatters :date) postdate)
         nil))
+
+(defn server-name-from-request [request]
+    (str (:server-name request)
+         (if (not (nil? (:server-port request)))
+             (str ":" (:server-port request)))))
     
 (defroutes main-routes
            (GET "/" [:as request]
-               (let [server-name (str
-                                     (:server-name request)
-                                     (if (not (nil? (:server-port request)))
-                                         (str ":" (:server-port request))))
-                     uri (:uri request)]
-                   (let [domain (data/get-domain server-name)]
-                       (html-response
-                           (if (not (nil? domain))
-                               (render-html-posts-helper (:blogid domain) request)
-                               (templates/about {:user (data/get-current-user)}))))))
+               (let [server-name (server-name-from-request request)
+                     domain (data/get-domain server-name)]
+                   (html-response
+                       (if (not (nil? domain))
+                           (render-html-posts-paginator (:blogid domain) request)
+                           (templates/about {:user (data/get-current-user)})))))
+           (GET "/:year/:month/:title" [year month title :as request]
+                (let [server-name (server-name-from-request request)
+                      domain (data/get-domain server-name)]
+                    (if (not (nil? domain))
+                        (html-response (render-html-posts-paginator
+                                           (:blogid domain) request year month title))
+                        (route/not-found "page not found"))))
 
            ; "account urls"
            (GET templates/*permission-denied-uri* [] (html-response (permission-denied)))
@@ -251,7 +269,17 @@
 
            ; "post urls"
            (GET "/blog/:blogid/post/" [blogid :as request]
-               (html-response (render-html-posts-helper (Integer/parseInt blogid) request)))
+               (html-response (render-html-posts-paginator
+                                  (Integer/parseInt blogid) request)))
+           (GET "/blog/:blogid/post/:year/:month/:title" [blogid year month title :as request]
+                (let [blogid (Integer/parseInt blogid)
+                      post (data/get-post blogid
+                                          title
+                                          (Integer/parseInt year)
+                                          (Integer/parseInt month))]
+                    (if (not (nil? post))
+                        (html-response (-render-html-posts-helper blogid request [post] 0 1))
+                        (route/not-found "page not found"))))
            (GET "/blog/:bid/post/new" [bid]
                (if (not (data/blog-owner? bid))
                    (redirect templates/*permission-denied-uri*)
