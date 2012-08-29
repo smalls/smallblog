@@ -99,6 +99,17 @@ with or without changes):
 Notes, mostly for myself.
 
 
+### Todo
+
+- Analytics
+- Form validation
+- Better look & feel
+DONE- Custom domains (one account can have multiple blogs, each with a unique
+		DNS entry)
+DONE- Store picture in S3
+DONE- Post preview on the edit screen
+
+
 ### Some postgres commands
 
 to connect:
@@ -112,6 +123,6 @@ to describe a table:
 
 ## License
 
-Copyright (C) 2011 Matt Small
+Copyright (C) 2011-2012 Matt Small
 
 Distributed under the Eclipse Public License, the same as Clojure.
