@@ -1,5 +1,9 @@
 # smallblog
 
+This was kind of a work in progress. Everything checked in is working, but I'm
+not currently developing this.
+
+
 A small basic blog system.
 
 Key features include:
