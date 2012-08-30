@@ -4,6 +4,8 @@ This was kind of a work in progress. Everything checked in is working, but I'm
 not currently developing this.
 
 
+
+
 A small basic blog system.
 
 Key features include:
@@ -127,6 +129,6 @@ to describe a table:
 
 ## License
 
-Copyright (C) 2011-2012 Matt Small
+Copyright (c) 2011-2012, Matt Small
 
-Distributed under the Eclipse Public License, the same as Clojure.
+Distributed under the BSD License - see LICENSE.
